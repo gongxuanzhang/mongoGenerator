@@ -26,31 +26,7 @@ public class CollectionUtils {
     }
 
     public static void main(String[] args) throws IOException {
-        URL resource = CollectionUtils.class.getClassLoader().getResource("aaa.xml");
-        Document load = XMLUtils.load(resource);
-        Element rootElement = load.getRootElement();
-        List<Element> template = rootElement.elements("template");
-        for (Element element : template) {
-            String data = element.getData().toString();
-            System.out.println(data);
-        }
 
-        List<Element> mongoElements = rootElement.elements("mongo");
-        for (Element mongoElement : mongoElements) {
-            MongoConnection mongoConnection = MongoConnection.fromElement(mongoElement);
-            List<Element> databaseElements = mongoElement.elements("database");
-            for (Element databaseElement : databaseElements) {
-                List<Element> collectionElements = databaseElement.elements("collection");
-                for (Element collectionElement : collectionElements) {
-                    MongoCollection collection = MongoCollection.fromElement(collectionElement);
-                    System.out.println(collection);
-                }
-
-            }
-
-            System.out.println(mongoConnection);
-
-        }
     }
 
 

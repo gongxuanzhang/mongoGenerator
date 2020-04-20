@@ -2,7 +2,13 @@ package model.mongo;
 
 import common.util.AssertUtils;
 import common.util.StringUtils;
+import model.Template;
+import org.dom4j.Attribute;
 import org.dom4j.Element;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /** mongo的文档实体
  * @author: gxz
@@ -15,6 +21,8 @@ public class MongoCollection {
     private NameStrategy nameStrategy;
     private String primaryPackage;
     private String innerPackage;
+    private List<String> templateNames;
+    private List<Template> templates;
 
     public static MongoCollection fromElement(Element element){
         MongoCollection result =  new MongoCollection();
@@ -43,7 +51,25 @@ public class MongoCollection {
         result.setPrimaryPackage(primaryPackage);
         String innerPackage = element.attributeValue("innerPackage");
         result.setInnerPackage(StringUtils.isEmpty(innerPackage)?primaryPackage:innerPackage);
+        String templateNameStr = element.attributeValue("template");
+        if(StringUtils.isNotEmpty(templateNameStr)){
+            List<String> templateNames = templateNames2list(templateNameStr.trim());
+            result.setTemplateNames(templateNames);
+        }
         return result;
+    }
+
+    private static List<String> templateNames2list(String templateNames){
+        List<String> result = new ArrayList<>();
+        if(StringUtils.isEmpty(templateNames)){
+            return null;
+        }
+        if(templateNames.contains(",")){
+            String[] names = templateNames.split(",");
+            result.addAll(Arrays.asList(names));
+        }
+        return result;
+
     }
 
     @Override
@@ -69,6 +95,24 @@ public class MongoCollection {
 
     public String getPrimaryPackage() {
         return primaryPackage;
+    }
+
+    public List<String> getTemplateNames() {
+        return templateNames;
+    }
+
+    public MongoCollection setTemplateNames(List<String> templateNames) {
+        this.templateNames = templateNames;
+        return this;
+    }
+
+    public List<Template> getTemplates() {
+        return templates;
+    }
+
+    public MongoCollection setTemplates(List<Template> templates) {
+        this.templates = templates;
+        return this;
     }
 
     public MongoCollection setPrimaryPackage(String primaryPackage) {

@@ -4,6 +4,8 @@ import common.util.AssertUtils;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 
+import java.util.List;
+
 /** mongo连接对象
  * @author: gxz
  * @email: 514190950@qq.com
@@ -15,6 +17,7 @@ public class MongoConnection {
     private String password;
     private String source;
     private boolean auth;
+    private List<MongoDatabase> databases;
 
     public static MongoConnection fromElement(Element element){
         MongoConnection result = new MongoConnection();
@@ -51,6 +54,16 @@ public class MongoConnection {
                 ", source='" + source + '\'' +
                 ", auth=" + auth +
                 '}';
+    }
+
+
+    public List<MongoDatabase> getDatabases() {
+        return databases;
+    }
+
+    public MongoConnection setDatabases(List<MongoDatabase> databases) {
+        this.databases = databases;
+        return this;
     }
 
     public String getHost() {
