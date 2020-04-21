@@ -4,13 +4,30 @@ package model;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * 每一个对象属性都可以封装成此对象
+ * @author gxz
+ * @email 514190950@qq.com
+ */
 
 public class GeneratorModel implements Serializable {
+    /***属性名**/
     private String propertyName;
+    /***属性类型 对应mongodb api $type**/
     private Integer type;
+    /***此属性是否是数组**/
     private boolean array = false;
+    /***如果此属性是对象  那么他仍然有此类型的子类**/
     private List<GeneratorModel> child;
 
+    /**
+     * 功能描述:2是string 3是对象 4是数组 9是时间 16是int 18 是long
+     * @author : gxz
+     */
+    public GeneratorModel setType(Integer type) {
+        this.type = type;
+        return this;
+    }
 
     public Boolean getArray() {
         return array;
@@ -20,18 +37,7 @@ public class GeneratorModel implements Serializable {
         this.array = array;
         return this;
     }
-    /**
-     * 功能描述:2是string 3是对象 4是数组 9是时间 16是int 18 是long
-     *
-     * @author: gxz
-     * @param:
-     * @return:
-     * @date: 2019/7/1 17:47
-     */
-    public GeneratorModel setType(Integer type) {
-        this.type = type;
-        return this;
-    }
+
 
 
     public String getPropertyName() {
