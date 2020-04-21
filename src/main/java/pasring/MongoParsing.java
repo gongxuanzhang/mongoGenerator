@@ -1,8 +1,11 @@
 package pasring;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.util.StringUtils;
@@ -19,7 +22,6 @@ import java.util.concurrent.*;
  **/
 public class MongoParsing {
 
-
     final private MongoCollection<Document> collection;
 
     final private int scanCount;
@@ -34,13 +36,23 @@ public class MongoParsing {
             new LinkedBlockingQueue<>(1024),
             Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy()
     );
-    private final static int[] TYPE_NUMBER = {3, 16, 18, 8, 9, 2};
+    private final static int[] TYPE = {3, 16, 18, 8, 9, 2, 1};
+    private final static int ARRAY_TYPE = 4;
     private List<GeneratorFileInfo> generatorFileInfo = new ArrayList<>();
 
 
     public MongoParsing(MongoCollection<Document> collection, int scanCount) {
         this.collection = collection;
-        this.scanCount = scanCount;
+        this.scanCount = scanCount > 1000000 ? 1000000 : scanCount;
+
+    }
+
+    public void process() {
+        //初始化
+        initColNames();
+        //解析属性值
+
+
     }
 
     /**
@@ -49,8 +61,8 @@ public class MongoParsing {
      * @author: gxz
      * @date: 2019/7/4 16:24
      */
-    public  List<String> groupAggregation(Integer skip, Integer limit, String proName) throws MongoCommandException {
-        if (proName == null || "".equals(proName)) proName = "$ROOT";
+    public List<String> groupAggregation(Integer skip, Integer limit, String proName) throws MongoCommandException {
+        if (StringUtils.isEmpty(proName)) proName = "$ROOT";
         if (skip == null) skip = 0;
         if (limit == null) limit = 100000;
         MongoCollection<Document> collection = this.collection;
@@ -80,6 +92,39 @@ public class MongoParsing {
         }
 
     }
+
+    /**
+     * 如果一个文档是对象类型 递归取出内容
+     * @param parameterName 对象类型的参数名称比如 a.b   这个参数至少包含一个"."
+     * @param isArray 这个列表是否是数组  需要上层判断  这个参数很重要
+     * @return 把这个属性极其所有子类全都封装成GeneratorModel 传递给上层 作为上层的children
+     */
+    public GeneratorModel innerParameterProcess(String parameterName, boolean isArray) {
+        GeneratorModel generatorModel = new GeneratorModel();
+        Document query = new Document(parameterName, new Document("$exists", true));
+        Document filed = new Document("_id", 0).append(parameterName, 1);
+        FindIterable<Document> innerDocuments = this.collection.find(query).projection(filed).limit(this.scanCount);
+        String parentParameterName = parameterName;
+            //返回的结果一定是最外层属性名  比如我查询的是 a.b   但是返回值的key也是a  值里面有b
+        String[] split = parameterName.split("\\.");
+        parentParameterName = split[0];
+        generatorModel.setPropertyName(split[split.length-1]);
+        Set<String> innerParameterNames = new HashSet<>();
+        for (Document innerDocument : innerDocuments) {
+            if(isArray){
+                JSONArray jsonArray = new JSONObject(innerDocument).getJSONArray(parentParameterName);
+                for (Object jsonObject : jsonArray) {
+                    JSONObject document = (JSONObject) jsonObject;
+                    innerParameterNames.addAll(document.keySet());
+                }
+            }else{
+                JSONObject jsonObject = new JSONObject(innerDocument);
+                innerParameterNames.addAll(jsonObject.keySet());
+            }
+        }
+        return null;
+    }
+
 
     /**
      * 功能描述:集合中是对象的属性值 专用
@@ -144,29 +189,17 @@ public class MongoParsing {
         return groupAggregation(null, null, proName);
     }
 
-    private String firstLower(String str) {
-        String substring = str.substring(0, 1);
-        return substring.toLowerCase() + str.substring(1);
-    }
-
-    private String firstUpper(String str) {
-        String substring = str.substring(0, 1);
-        return substring.toUpperCase() + str.substring(1);
-    }
-
-
 
     /**
      * 功能描述:提供属性名 获取相应的属性信息  封装成generator对象
-     * (如果表中结构复杂 效率极低  多线程实现)
      *
      * @author: gxz
-     * @param: propertyName属性名
-     * @return:
-     * @date: 2019/7/2 16:39
+     * @param: propertyName属性名 可以是层级名  比如 name 也可以是info.name
+     * @return: 解析之后的Model {@see #GeneratorModel}
+     * @see GeneratorModel
      */
 
-    private GeneratorModel processName(String propertyName) {
+    public GeneratorModel processName(String propertyName) {
         System.out.println(Thread.currentThread().getName() + "启动    执行[" + propertyName + "]的操作");
         MongoCollection<Document> collection = this.collection;
         GeneratorModel result = new GeneratorModel();
@@ -176,36 +209,32 @@ public class MongoParsing {
             return result;
         }
         result.setPropertyName(propertyName);
-        MongoCursor<Document> isArray = collection.find(new Document(propertyName, new Document("$type", 4))).limit(1).iterator();
+        MongoCursor<Document> isArray = collection.find(new Document(propertyName, new Document("$type", ARRAY_TYPE))).limit(1).iterator();
         if (isArray.hasNext()) {
             System.out.println("解析到" + propertyName + "是数组");
             result.setArray(true);
-            for (int i : TYPE_NUMBER) {
+            for (int i : TYPE) {
                 MongoCursor<Document> iterator = collection.find(new Document(propertyName, new Document("$type", i))).limit(1).iterator();
                 if (iterator.hasNext()) {
                     if (i == 3) {
                         System.out.println("解析到" + propertyName + "是对象");
                         result.setChild(produceChildList(propertyName));
-                        if (result.getChild().size() == 0) {
-                            result.setProblem(true);
-                        }
                     }
-                    result.setType(i); //2是string 3是对象 4是数组 16是int 18 是long
+                    //1是double 2是string 3是对象 4是数组 16是int 18 是long
+                    result.setType(i);
                     return result;
                 }
             }
         } else {
-            for (int i : TYPE_NUMBER) {
+            for (int i : TYPE) {
                 MongoCursor<Document> iterator = collection.find(new Document(propertyName, new Document("$type", i))).limit(1).iterator();
                 if (iterator.hasNext()) {
                     if (i == 3) {
                         System.out.println("解析到" + propertyName + "是对象");
-                        result.setChild(produceChildObject(propertyName));
-                        if (result.getChild().size() == 0) {
-                            result.setProblem(true);
-                        }
                     }
-                    result.setType(i); //2是string 3是对象 4是数组 16是int 18 是long    -1是字符串数组 -2是Interger数组
+                    //1是double 2是string 3是对象 4是数组 16是int 18 是long
+                    //到这里就是数组了
+                    result.setType(i);
                     return result;
                 }
             }
@@ -281,7 +310,7 @@ public class MongoParsing {
     }
 
     /**
-     * 功能描述:初始化列名通过forkjoin工作窃取框架实现  平均等待时长4秒 可自定义扫描文本长度 如不指定 默认为40W
+     * 功能描述:解析这个集合的列名  用ForkJoin框架实现
      *
      * @author: gxz
      * @date: 2019/7/5 14:48
@@ -290,7 +319,6 @@ public class MongoParsing {
         long start = System.currentTimeMillis();
         int scan = this.scanCount;
         if (scan < 400000) scan = 400000;
-        if (collectionIsEmpty()) throw new EmptyCollectionException();
         long count = this.collection.countDocuments();
         ForkJoinPool pool = new ForkJoinPool();
         ForkJoinTask<List<String>> task;
@@ -300,7 +328,8 @@ public class MongoParsing {
             task = new ForkJoinGetProcessName(0, (int) count);
         }
         this.colNames = pool.invoke(task);
-        System.out.println("初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
+        System.out.println("collection[" + this.collection.getNamespace().getCollectionName() +
+                "]初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
     }
 
 

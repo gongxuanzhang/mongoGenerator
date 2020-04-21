@@ -1,7 +1,9 @@
 import com.mongodb.MongoClient;
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import common.factory.GeneratorModelAnalysisFactory;
+import model.GeneratorModel;
 import model.mongo.GeneratorMongoCollection;
 import model.mongo.GeneratorMongoConnection;
 import model.mongo.GeneratorMongoDatabase;
@@ -29,9 +31,10 @@ public class App {
             Map<GeneratorMongoCollection, MongoCollection<Document>> mongoCollection = GeneratorModelAnalysisFactory.getMongoCollection(generatorMongoConnection);
             for (MongoCollection<Document> value : mongoCollection.values()) {
                 MongoNamespace namespace = value.getNamespace();
-                System.out.println("数据库["+namespace.getDatabaseName()+"]表["+namespace.getCollectionName()+"]有"+value.count()+"条记录");
-                MongoParsing mongoParsing = new MongoParsing(value);
+                System.out.println("数据库["+namespace.getDatabaseName()+"]表["+namespace.getCollectionName()+"]有"+value.countDocuments()+"条记录");
+                MongoParsing mongoParsing = new MongoParsing(value,400000);
                 List<String> strings = mongoParsing.groupAggregation(null, 500000, null);
+                GeneratorModel generatorModel = mongoParsing.processName("a.b.c.d.pp");
                 System.out.println(strings);
             }
         }
