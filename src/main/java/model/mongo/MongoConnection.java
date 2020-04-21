@@ -19,29 +19,6 @@ public class MongoConnection {
     private boolean auth;
     private List<MongoDatabase> databases;
 
-    public static MongoConnection fromElement(Element element){
-        MongoConnection result = new MongoConnection();
-        Attribute host = element.attribute("host");
-        AssertUtils.attrAssert(host,"xml <mongo> host is null ");
-        Attribute port = element.attribute("port");
-        AssertUtils.attrAssert(port,"xml <mongo> port is null ");
-        Attribute authAttr = element.attribute("auth");
-        boolean auth =authAttr==null?true:Boolean.valueOf(authAttr.getValue());
-        result.setHost(host.getValue()).setPort(Integer.valueOf(port.getValue()));
-        result.setAuth(auth);
-        if(result.auth){
-            Attribute username = element.attribute("username");
-            AssertUtils.attrAssert(username,"xml <mongo> username is null ");
-            Attribute password = element.attribute("password");
-            AssertUtils.attrAssert(password,"xml <mongo> password is null ");
-            Attribute source = element.attribute("source");
-            AssertUtils.attrAssert(source,"xml <mongo> source is null ");
-            result.setUsername(username.getValue()).setPassword(password.getValue());
-            result.setSource(source.getValue());
-        }
-        return result;
-    }
-
 
 
     @Override

@@ -3,7 +3,7 @@
     <mongo id="mongo1" host="172.16.1.102" port="27017" username="tincery" password="Txy123.com"
            source="secret_reconnaissance_pro">
         <database name="secret_reconnaissance_pro">
-            <collection name="x509cert" scannerCount="561" repetitionStrategy="map" primaryPackage="com.sadf" template="t1,t2,t3"/>
+            <collection name="x509cert" scannerCount="561" repetitionStrategy="map" primaryPackage="com.sadf" template="t1,t2"/>
             <collection name="email" repetitionStrategy="json" primaryPackage="com.sadf"/>
         </database>
     </mongo>
@@ -19,7 +19,7 @@
 
     <template id="t1">
             public AA class(){
-                #{aa}
+                #{dbname} #{aa}
         }
     </template>
 

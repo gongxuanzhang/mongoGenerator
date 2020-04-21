@@ -1,8 +1,9 @@
-package resolver;
+package pasring;
 
 import com.mongodb.*;
 import com.mongodb.client.MongoDatabase;
 import common.exception.XMLConfigException;
+import common.factory.ElementParsingFactory;
 import common.util.AssertUtils;
 import common.util.CollectionUtils;
 import common.util.XMLUtils;
@@ -24,7 +25,7 @@ import java.util.Map;
  * @author: gxz
  * @date: 2020/4/20 10:07
  **/
-public class DataBaseAnalyze {
+public class DataBaseParsing {
     private static final String CONFIG_PATH = "aaa.xml";
 
     public static void main(String[] args) {
@@ -71,7 +72,7 @@ public class DataBaseAnalyze {
             //拿到mongo标签
             List<Element> mongoElements = rootElement.elements("mongo");
             for (Element mongoElement : mongoElements) {
-                MongoConnection mongoConnection = MongoConnection.fromElement(mongoElement);
+                MongoConnection mongoConnection = ElementParsingFactory.createMongoConnection(mongoElement);
                 //mongo中的 database
                 List<Element> databaseElements = mongoElement.elements("database");
                 List<model.mongo.MongoDatabase> databases = new ArrayList<>();
@@ -82,7 +83,8 @@ public class DataBaseAnalyze {
                     List<MongoCollection> collections = new ArrayList<>();
                     List<Element> collectionElements = databaseElement.elements("collection");
                     for (Element collectionElement : collectionElements) {
-                        MongoCollection collection = MongoCollection.fromElement(collectionElement);
+                        MongoCollection collection = ElementParsingFactory.createMongoCollection(collectionElement);
+                        collection.setDatabaseName(databaseName);
                         List<String> templateNames = collection.getTemplateNames();
                         if (CollectionUtils.isNotEmpty(templateNames)) {
                             List<Template> templates = new ArrayList<>();
@@ -90,7 +92,7 @@ public class DataBaseAnalyze {
                                 Template findTemplate = templateMap.getOrDefault(templateName, null);
                                 templates.add(findTemplate);
                                 if (findTemplate == null) {
-                                    throw new XMLConfigException("<collection id=" + collection.getName() + "> template cannot find in <template>");
+                                    throw new XMLConfigException("<collection id=" + collection.getName() + "> template["+templateName+"] cannot find in <template>");
                                 }
                             }
                             collection.setTemplates(templates);
