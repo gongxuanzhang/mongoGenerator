@@ -2,8 +2,8 @@ package common.factory;
 
 import common.util.AssertUtils;
 import common.util.StringUtils;
-import model.mongo.MongoCollection;
-import model.mongo.MongoConnection;
+import model.mongo.GeneratorMongoCollection;
+import model.mongo.GeneratorMongoConnection;
 import model.mongo.NameStrategy;
 import model.mongo.RepetitionStrategy;
 import org.dom4j.Attribute;
@@ -21,8 +21,8 @@ public class ElementParsingFactory {
 
     private static final String TEMPLATE_NAME_SEPARATOR = ",";
 
-     public static MongoCollection createMongoCollection(Element element){
-         MongoCollection result =  new MongoCollection();
+     public static GeneratorMongoCollection createMongoCollection(Element element){
+         GeneratorMongoCollection result =  new GeneratorMongoCollection();
          String name = element.attributeValue("name");
          String primaryPackage = element.attributeValue("primaryPackage");
 
@@ -56,8 +56,8 @@ public class ElementParsingFactory {
          return result;
      }
 
-     public static MongoConnection createMongoConnection(Element element){
-         MongoConnection result = new MongoConnection();
+     public static GeneratorMongoConnection createMongoConnection(Element element){
+         GeneratorMongoConnection result = new GeneratorMongoConnection();
          Attribute host = element.attribute("host");
          AssertUtils.attrAssert(host,"xml <mongo> host is null ");
          Attribute port = element.attribute("port");

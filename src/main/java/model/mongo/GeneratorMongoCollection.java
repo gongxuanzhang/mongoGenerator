@@ -1,20 +1,15 @@
 package model.mongo;
 
-import common.util.AssertUtils;
-import common.util.StringUtils;
 import model.Template;
-import org.dom4j.Attribute;
-import org.dom4j.Element;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /** mongo的文档实体
  * @author: gxz
  * @email : 514190950@qq.com
  **/
-public class MongoCollection {
+public class GeneratorMongoCollection {
     private String databaseName;
     private String name;
     private Integer scannerCount;
@@ -29,7 +24,7 @@ public class MongoCollection {
 
     @Override
     public String toString() {
-        return "MongoCollection{" +
+        return "GeneratorMongoCollection{" +
                 "name='" + name + '\'' +
                 ", scannerCount=" + scannerCount +
                 ", repetitionStrategy=" + repetitionStrategy +
@@ -39,11 +34,32 @@ public class MongoCollection {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GeneratorMongoCollection that = (GeneratorMongoCollection) o;
+        return Objects.equals(databaseName, that.databaseName) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(scannerCount, that.scannerCount) &&
+                repetitionStrategy == that.repetitionStrategy &&
+                nameStrategy == that.nameStrategy &&
+                Objects.equals(primaryPackage, that.primaryPackage) &&
+                Objects.equals(innerPackage, that.innerPackage) &&
+                Objects.equals(templateNames, that.templateNames) &&
+                Objects.equals(templates, that.templates);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(databaseName, name, scannerCount, repetitionStrategy, nameStrategy, primaryPackage, innerPackage, templateNames, templates);
+    }
+
     public String getName() {
         return name;
     }
 
-    public MongoCollection setName(String name) {
+    public GeneratorMongoCollection setName(String name) {
         this.name = name;
         return this;
     }
@@ -52,7 +68,7 @@ public class MongoCollection {
         return databaseName;
     }
 
-    public MongoCollection setDatabaseName(String databaseName) {
+    public GeneratorMongoCollection setDatabaseName(String databaseName) {
         this.databaseName = databaseName;
         return this;
     }
@@ -65,7 +81,7 @@ public class MongoCollection {
         return templateNames;
     }
 
-    public MongoCollection setTemplateNames(List<String> templateNames) {
+    public GeneratorMongoCollection setTemplateNames(List<String> templateNames) {
         this.templateNames = templateNames;
         return this;
     }
@@ -74,12 +90,12 @@ public class MongoCollection {
         return templates;
     }
 
-    public MongoCollection setTemplates(List<Template> templates) {
+    public GeneratorMongoCollection setTemplates(List<Template> templates) {
         this.templates = templates;
         return this;
     }
 
-    public MongoCollection setPrimaryPackage(String primaryPackage) {
+    public GeneratorMongoCollection setPrimaryPackage(String primaryPackage) {
         this.primaryPackage = primaryPackage;
         return this;
     }
@@ -88,7 +104,7 @@ public class MongoCollection {
         return innerPackage;
     }
 
-    public MongoCollection setInnerPackage(String innerPackage) {
+    public GeneratorMongoCollection setInnerPackage(String innerPackage) {
         this.innerPackage = innerPackage;
         return this;
     }
@@ -97,7 +113,7 @@ public class MongoCollection {
         return scannerCount;
     }
 
-    public MongoCollection setScannerCount(Integer scannerCount) {
+    public GeneratorMongoCollection setScannerCount(Integer scannerCount) {
         this.scannerCount = scannerCount;
         return this;
     }
@@ -107,7 +123,7 @@ public class MongoCollection {
         return repetitionStrategy;
     }
 
-    public MongoCollection setRepetitionStrategy(RepetitionStrategy repetitionStrategy) {
+    public GeneratorMongoCollection setRepetitionStrategy(RepetitionStrategy repetitionStrategy) {
         this.repetitionStrategy = repetitionStrategy;
         return this;
     }
@@ -116,7 +132,7 @@ public class MongoCollection {
         return nameStrategy;
     }
 
-    public MongoCollection setNameStrategy(NameStrategy nameStrategy) {
+    public GeneratorMongoCollection setNameStrategy(NameStrategy nameStrategy) {
         this.nameStrategy = nameStrategy;
         return this;
     }

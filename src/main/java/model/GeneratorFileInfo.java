@@ -4,7 +4,7 @@ package model;
  * @author: gxz
  * @email : 514190950@qq.com
  **/
-public class FileInfo {
+public class GeneratorFileInfo {
     private String filePath;
     private String content;
 
@@ -12,7 +12,7 @@ public class FileInfo {
         return filePath;
     }
 
-    public FileInfo setFilePath(String filePath) {
+    public GeneratorFileInfo setFilePath(String filePath) {
         this.filePath = filePath;
         return this;
     }
@@ -21,7 +21,7 @@ public class FileInfo {
         return content;
     }
 
-    public FileInfo setContent(String content) {
+    public GeneratorFileInfo setContent(String content) {
         this.content = content;
         return this;
     }

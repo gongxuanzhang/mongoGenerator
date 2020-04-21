@@ -1,15 +1,7 @@
 package common.util;
 
-import model.mongo.MongoCollection;
-import model.mongo.MongoConnection;
-import model.mongo.MongoDatabase;
-import org.dom4j.Document;
-import org.dom4j.Element;
-
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author: gxz

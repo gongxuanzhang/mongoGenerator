@@ -1,15 +1,14 @@
 package pasring;
 
-import com.mongodb.*;
-import com.mongodb.client.MongoDatabase;
 import common.exception.XMLConfigException;
 import common.factory.ElementParsingFactory;
 import common.util.AssertUtils;
 import common.util.CollectionUtils;
 import common.util.XMLUtils;
 import model.Template;
-import model.mongo.MongoCollection;
-import model.mongo.MongoConnection;
+import model.mongo.GeneratorMongoCollection;
+import model.mongo.GeneratorMongoConnection;
+import model.mongo.GeneratorMongoDatabase;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -28,22 +27,7 @@ import java.util.Map;
 public class DataBaseParsing {
     private static final String CONFIG_PATH = "aaa.xml";
 
-    public static void main(String[] args) {
-        List<ServerAddress> adds = new ArrayList<>();
-//ServerAddress()两个参数分别为 服务器地址 和 端口
-        ServerAddress serverAddress = new ServerAddress("172.16.1.102", 27017);
-        adds.add(serverAddress);
 
-        List<MongoCredential> credentials = new ArrayList<>();
-//MongoCredential.createScramSha1Credential()三个参数分别为 用户名 数据库名称 密码
-        MongoCredential mongoCredential = MongoCredential.createScramSha1Credential("tincery", "secret_reconnaissance_pro", "Txy123.com".toCharArray());
-        credentials.add(mongoCredential);
-
-//通过连接认证获取MongoDB连接
-        MongoClient mongoClient = new MongoClient(adds, credentials);
-        MongoDatabase secret_reconnaissance_pro = mongoClient.getDatabase("secret_reconnaissance_pro");
-        long x509cert = secret_reconnaissance_pro.getCollection("x509cert").count();
-    }
 
     public static Resolver resolver() {
         return new Resolver();
@@ -53,8 +37,8 @@ public class DataBaseParsing {
      * 解析器
      */
     public static class Resolver {
-        public List<MongoConnection> analyze() {
-            List<MongoConnection> connections = new ArrayList<>();
+        public List<GeneratorMongoConnection> analyze() {
+            List<GeneratorMongoConnection> connections = new ArrayList<>();
             URL resource = CollectionUtils.class.getClassLoader().getResource(CONFIG_PATH);
             Document load = XMLUtils.load(resource);
             Element rootElement = load.getRootElement();
@@ -72,18 +56,18 @@ public class DataBaseParsing {
             //拿到mongo标签
             List<Element> mongoElements = rootElement.elements("mongo");
             for (Element mongoElement : mongoElements) {
-                MongoConnection mongoConnection = ElementParsingFactory.createMongoConnection(mongoElement);
+                GeneratorMongoConnection generatorMongoConnection = ElementParsingFactory.createMongoConnection(mongoElement);
                 //mongo中的 database
                 List<Element> databaseElements = mongoElement.elements("database");
-                List<model.mongo.MongoDatabase> databases = new ArrayList<>();
+                List<GeneratorMongoDatabase> databases = new ArrayList<>();
                 for (Element databaseElement : databaseElements) {
                     String databaseName = databaseElement.attributeValue("name");
-                    model.mongo.MongoDatabase mongoDatabase = new model.mongo.MongoDatabase();
-                    mongoDatabase.setName(databaseName);
-                    List<MongoCollection> collections = new ArrayList<>();
+                    GeneratorMongoDatabase generatorMongoDatabase = new GeneratorMongoDatabase();
+                    generatorMongoDatabase.setName(databaseName);
+                    List<GeneratorMongoCollection> collections = new ArrayList<>();
                     List<Element> collectionElements = databaseElement.elements("collection");
                     for (Element collectionElement : collectionElements) {
-                        MongoCollection collection = ElementParsingFactory.createMongoCollection(collectionElement);
+                        GeneratorMongoCollection collection = ElementParsingFactory.createMongoCollection(collectionElement);
                         collection.setDatabaseName(databaseName);
                         List<String> templateNames = collection.getTemplateNames();
                         if (CollectionUtils.isNotEmpty(templateNames)) {
@@ -99,11 +83,11 @@ public class DataBaseParsing {
                         }
                         collections.add(collection);
                     }
-                    mongoDatabase.setMongoCollections(collections);
-                    databases.add(mongoDatabase);
+                    generatorMongoDatabase.setGeneratorMongoCollections(collections);
+                    databases.add(generatorMongoDatabase);
                 }
-                mongoConnection.setDatabases(databases);
-                connections.add(mongoConnection);
+                generatorMongoConnection.setDatabases(databases);
+                connections.add(generatorMongoConnection);
             }
             return connections;
         }

@@ -2,7 +2,7 @@ package pasring;
 
 import common.util.StringUtils;
 import model.Template;
-import model.mongo.MongoCollection;
+import model.mongo.GeneratorMongoCollection;
 
 /**
  * @author: gxz
@@ -33,7 +33,7 @@ public class DefaultTemplateParsing implements TemplateParsing {
 
 
     @Override
-    public String analyzeContent(String content, MongoCollection mongoCollection) {
+    public String analyzeContent(String content, GeneratorMongoCollection generatorMongoCollection) {
         if (StringUtils.isEmpty(content.trim())) {
             return null;
         }
@@ -60,7 +60,7 @@ public class DefaultTemplateParsing implements TemplateParsing {
                 offset = src.length;
             } else {
                 expression.append(src, offset, end - offset);
-                builder.append(handler.handlerToken(expression.toString(), mongoCollection));
+                builder.append(handler.handlerToken(expression.toString(), generatorMongoCollection));
                 offset = end + closeToken.length();
             }
             start = content.indexOf(openToken, offset);
@@ -75,7 +75,7 @@ public class DefaultTemplateParsing implements TemplateParsing {
 
 
     @Override
-    public String analyzeContent(Template template, MongoCollection mongoCollection) {
+    public String analyzeContent(Template template, GeneratorMongoCollection generatorMongoCollection) {
         return null;
     }
 }

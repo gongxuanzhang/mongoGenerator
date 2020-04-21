@@ -1,29 +1,25 @@
 package model.mongo;
 
-import common.util.AssertUtils;
-import org.dom4j.Attribute;
-import org.dom4j.Element;
-
 import java.util.List;
 
 /** mongo连接对象
  * @author: gxz
  * @email: 514190950@qq.com
  **/
-public class MongoConnection {
+public class GeneratorMongoConnection {
     private String host;
     private Integer port;
     private String username;
     private String password;
     private String source;
     private boolean auth;
-    private List<MongoDatabase> databases;
+    private List<GeneratorMongoDatabase> databases;
 
 
 
     @Override
     public String toString() {
-        return "MongoConnection{" +
+        return "GeneratorMongoConnection{" +
                 "host='" + host + '\'' +
                 ", port=" + port +
                 ", username='" + username + '\'' +
@@ -34,11 +30,11 @@ public class MongoConnection {
     }
 
 
-    public List<MongoDatabase> getDatabases() {
+    public List<GeneratorMongoDatabase> getDatabases() {
         return databases;
     }
 
-    public MongoConnection setDatabases(List<MongoDatabase> databases) {
+    public GeneratorMongoConnection setDatabases(List<GeneratorMongoDatabase> databases) {
         this.databases = databases;
         return this;
     }
@@ -47,7 +43,7 @@ public class MongoConnection {
         return host;
     }
 
-    public MongoConnection setHost(String host) {
+    public GeneratorMongoConnection setHost(String host) {
         this.host = host;
         return this;
     }
@@ -56,7 +52,7 @@ public class MongoConnection {
         return port;
     }
 
-    public MongoConnection setPort(Integer port) {
+    public GeneratorMongoConnection setPort(Integer port) {
         this.port = port;
         return this;
     }
@@ -65,7 +61,7 @@ public class MongoConnection {
         return username;
     }
 
-    public MongoConnection setUsername(String username) {
+    public GeneratorMongoConnection setUsername(String username) {
         this.username = username;
         return this;
     }
@@ -74,7 +70,7 @@ public class MongoConnection {
         return password;
     }
 
-    public MongoConnection setPassword(String password) {
+    public GeneratorMongoConnection setPassword(String password) {
         this.password = password;
         return this;
     }
@@ -83,7 +79,7 @@ public class MongoConnection {
         return source;
     }
 
-    public MongoConnection setSource(String source) {
+    public GeneratorMongoConnection setSource(String source) {
         this.source = source;
         return this;
     }
@@ -92,7 +88,7 @@ public class MongoConnection {
         return auth;
     }
 
-    public MongoConnection setAuth(boolean auth) {
+    public GeneratorMongoConnection setAuth(boolean auth) {
         this.auth = auth;
         return this;
     }
