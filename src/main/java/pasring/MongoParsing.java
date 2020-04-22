@@ -6,7 +6,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.log.model.Type;
 import common.util.CollectionUtils;
-import model.GeneratorFileInfo;
 import model.GeneratorModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -82,18 +81,6 @@ public class MongoParsing {
 
     }
 
-    public GeneratorModel processParameter() {
-        GeneratorModel result = new GeneratorModel();
-        result.setPropertyName(this.collection.getNamespace().getCollectionName());
-        result.setType(3).setArray(false);
-        List<String> colNames = this.colNames;
-        List<GeneratorModel> children = new ArrayList<>();
-        for (String colName : colNames) {
-            GeneratorModel generatorModel = this.processNameType(colName);
-            children.add(generatorModel);
-        }
-        return result.setChild(children);
-    }
 
     /**
      * 如果一个文档是对象类型  获得这个属性的下一级的属性名的集合
