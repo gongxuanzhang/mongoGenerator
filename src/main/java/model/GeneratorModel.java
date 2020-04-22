@@ -2,6 +2,8 @@ package model;
 
 
 import common.util.CollectionUtils;
+import model.mongo.GeneratorMongoCollection;
+import pasring.TemplateParsing;
 
 import java.io.Serializable;
 import java.util.List;
@@ -23,10 +25,25 @@ public class GeneratorModel implements Serializable {
     /***如果此属性是对象  那么他仍然有此类型的子类**/
     private List<GeneratorModel> child;
 
+    private String path;
+
+    private List<Template> template;
+
 
     public boolean hasChild(){
         final int objectType = 2;
         return Objects.equals(type,objectType) || CollectionUtils.isNotEmpty(child);
+    }
+
+    public void fill(GeneratorMongoCollection generatorMongoCollection, TemplateParsing templateParsing){
+        this.setPropertyName(generatorMongoCollection.getName()+generatorMongoCollection.getBeanClose());
+        List<Template> templates = generatorMongoCollection.getTemplates();
+        for (Template template : templates) {
+            String templateContent
+                    = templateParsing.analyzeContent(template.getContent(), generatorMongoCollection);
+            template.setContent(templateContent);
+        }
+        this.setTemplate(generatorMongoCollection.getTemplates());
     }
 
     /**
@@ -38,7 +55,23 @@ public class GeneratorModel implements Serializable {
         return this;
     }
 
+    public List<Template> getTemplate() {
+        return template;
+    }
 
+    public String getPath() {
+        return path;
+    }
+
+    public GeneratorModel setPath(String path) {
+        this.path = path;
+        return this;
+    }
+
+    public GeneratorModel setTemplate(List<Template> template) {
+        this.template = template;
+        return this;
+    }
 
     public Boolean getArray() {
         return array;
@@ -48,7 +81,6 @@ public class GeneratorModel implements Serializable {
         this.array = array;
         return this;
     }
-
 
 
     public String getPropertyName() {

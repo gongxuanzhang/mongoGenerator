@@ -1,6 +1,7 @@
 package pasring;
 
 import common.exception.XMLConfigException;
+import common.util.StringUtils;
 import model.mongo.GeneratorMongoCollection;
 
 /**
@@ -9,9 +10,6 @@ import model.mongo.GeneratorMongoCollection;
  **/
 public class GenericAbstractTokenParser extends AbstractTokenHandler {
 
-    public GenericAbstractTokenParser(TemplateParsing templateParsing) {
-        super(templateParsing);
-    }
 
     @Override
     public String handlerToken(String parameter, GeneratorMongoCollection generatorMongoCollection) {
@@ -20,21 +18,14 @@ public class GenericAbstractTokenParser extends AbstractTokenHandler {
             case "db":
             case "dbname":
             case "database":
-                return generatorMongoCollection.getDatabaseName();
+            case "beanname":
+            case "bean":
+                return StringUtils.upperCase(generatorMongoCollection.getDatabaseName());
             default:
                 throw new XMLConfigException("<template> #{" + parameter + "} 无法解析");
         }
     }
 
-    @Override
-    public String dbNameHandler(String dbName) {
-        return null;
-    }
-
-    @Override
-    public String beanNameHandler(String collectionName) {
-        return null;
-    }
 
 
 }

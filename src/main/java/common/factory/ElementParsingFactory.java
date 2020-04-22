@@ -4,8 +4,6 @@ import common.util.AssertUtils;
 import common.util.StringUtils;
 import model.mongo.GeneratorMongoCollection;
 import model.mongo.GeneratorMongoConnection;
-import model.mongo.NameStrategy;
-import model.mongo.RepetitionStrategy;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 
@@ -24,26 +22,17 @@ public class ElementParsingFactory {
      public static GeneratorMongoCollection createMongoCollection(Element element){
          GeneratorMongoCollection result =  new GeneratorMongoCollection();
          String name = element.attributeValue("name");
-         String primaryPackage = element.attributeValue("primaryPackage");
+         String primaryPackage = element.attributeValue("package");
 
          AssertUtils.attrAssert(name,"XML collection name is empty");
-         AssertUtils.attrAssert(primaryPackage,"XML primaryPackage is empty");
+         AssertUtils.attrAssert(primaryPackage,"XML package is empty");
 
          String scannerCountFromXML = element.attributeValue("scannerCount");
          int scannerCount = StringUtils.isEmpty(scannerCountFromXML)?400000:Integer.valueOf(scannerCountFromXML);
          result.setName(name).setScannerCount(scannerCount);
 
-         String repetitionStrategyFromXML = element.attributeValue("repetitionStrategy");
-         String nameStrategyFromXML = element.attributeValue("nameStrategy");
-         //重复策略 默认是JSON 命名策略 默认是AUTO
-         NameStrategy nameStrategy
-                 = StringUtils.isEmpty(nameStrategyFromXML)?
-                 NameStrategy.AUTO:NameStrategy.valueOf(nameStrategyFromXML.toUpperCase());
-         result.setNameStrategy(nameStrategy);
-         RepetitionStrategy repetitionStrategy
-                 = StringUtils.isEmpty(repetitionStrategyFromXML)?
-                 RepetitionStrategy.JSON:RepetitionStrategy.valueOf(repetitionStrategyFromXML.toUpperCase());
-         result.setRepetitionStrategy(repetitionStrategy);
+         String repetitionStrategyFromXML = element.attributeValue("repetitionStrategyEnum");
+         String nameStrategyFromXML = element.attributeValue("nameStrategyEnum");
          //复杂实体的生成路径 如果没填写 默认是主包路径
          result.setPrimaryPackage(primaryPackage);
          String innerPackage = element.attributeValue("innerPackage");

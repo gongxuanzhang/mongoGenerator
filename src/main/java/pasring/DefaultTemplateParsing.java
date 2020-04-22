@@ -9,7 +9,6 @@ import model.mongo.GeneratorMongoCollection;
  **/
 public class DefaultTemplateParsing implements TemplateParsing {
 
-
     private final String openToken;
 
     private final String closeToken;
@@ -21,7 +20,6 @@ public class DefaultTemplateParsing implements TemplateParsing {
         this.closeToken = closeToken;
         this.handler = handler;
     }
-
 
     /***
      *   解析替换内容  例:
@@ -68,8 +66,6 @@ public class DefaultTemplateParsing implements TemplateParsing {
             builder.append(src, offset, src.length - offset);
         }
         return builder.toString();
-
-
     }
 
 }

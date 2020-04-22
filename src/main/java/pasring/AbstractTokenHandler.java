@@ -10,11 +10,6 @@ import model.mongo.GeneratorMongoCollection;
  **/
 public abstract class AbstractTokenHandler {
 
-    private final TemplateParsing templateParsing;
-
-    public AbstractTokenHandler(TemplateParsing templateParsing) {
-        this.templateParsing = templateParsing;
-    }
 
     /***
      * 参数处理器
