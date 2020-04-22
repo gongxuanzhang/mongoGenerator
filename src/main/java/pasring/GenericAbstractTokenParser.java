@@ -7,7 +7,12 @@ import model.mongo.GeneratorMongoCollection;
  * @author: gxz
  * @email : 514190950@qq.com
  **/
-public class GenericTokenParser implements TokenHandler {
+public class GenericAbstractTokenParser extends AbstractTokenHandler {
+
+    public GenericAbstractTokenParser(TemplateParsing templateParsing) {
+        super(templateParsing);
+    }
+
     @Override
     public String handlerToken(String parameter, GeneratorMongoCollection generatorMongoCollection) {
         switch (parameter.toLowerCase()) {
@@ -20,4 +25,16 @@ public class GenericTokenParser implements TokenHandler {
                 throw new XMLConfigException("<template> #{" + parameter + "} 无法解析");
         }
     }
+
+    @Override
+    public String dbNameHandler(String dbName) {
+        return null;
+    }
+
+    @Override
+    public String beanNameHandler(String collectionName) {
+        return null;
+    }
+
+
 }

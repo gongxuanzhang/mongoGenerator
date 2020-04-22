@@ -1,7 +1,6 @@
 package pasring;
 
 import common.util.StringUtils;
-import model.Template;
 import model.mongo.GeneratorMongoCollection;
 
 /**
@@ -15,9 +14,9 @@ public class DefaultTemplateParsing implements TemplateParsing {
 
     private final String closeToken;
 
-    private final TokenHandler handler;
+    private final AbstractTokenHandler handler;
 
-    public DefaultTemplateParsing(String openToken, String closeToken, TokenHandler handler) {
+    public DefaultTemplateParsing(String openToken, String closeToken, AbstractTokenHandler handler) {
         this.openToken = openToken;
         this.closeToken = closeToken;
         this.handler = handler;
@@ -73,9 +72,4 @@ public class DefaultTemplateParsing implements TemplateParsing {
 
     }
 
-
-    @Override
-    public String analyzeContent(Template template, GeneratorMongoCollection generatorMongoCollection) {
-        return null;
-    }
 }

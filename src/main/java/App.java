@@ -4,13 +4,11 @@ import common.factory.GeneratorModelAnalysisFactory;
 import model.GeneratorModel;
 import model.mongo.GeneratorMongoCollection;
 import model.mongo.GeneratorMongoConnection;
-import model.mongo.GeneratorMongoDatabase;
 import org.bson.Document;
 import pasring.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author gxz
@@ -19,7 +17,7 @@ import java.util.Set;
 public class App {
     public static void main(String[] args) {
         List<GeneratorMongoConnection> analyze = DataBaseParsing.resolver().analyze();
-        GenericTokenParser genericTokenParser = new GenericTokenParser();
+        GenericAbstractTokenParser genericTokenParser = new GenericAbstractTokenParser();
         TemplateParsing templateParsing = new DefaultTemplateParsing("#{","}",genericTokenParser);
         for (GeneratorMongoConnection generatorMongoConnection : analyze) {
             Map<GeneratorMongoCollection, MongoCollection<Document>> mongoCollection = GeneratorModelAnalysisFactory.getMongoCollection(generatorMongoConnection);

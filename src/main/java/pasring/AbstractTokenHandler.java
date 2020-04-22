@@ -3,10 +3,18 @@ package pasring;
 import model.mongo.GeneratorMongoCollection;
 
 /**
+ * token处理器
+ *
  * @author: gxz
  * @email : 514190950@qq.com
  **/
-public interface TokenHandler {
+public abstract class AbstractTokenHandler {
+
+    private final TemplateParsing templateParsing;
+
+    public AbstractTokenHandler(TemplateParsing templateParsing) {
+        this.templateParsing = templateParsing;
+    }
 
     /***
      * 参数处理器
@@ -15,7 +23,9 @@ public interface TokenHandler {
      * @param generatorMongoCollection 解析之后的collection对象
      * @return String  处理之后的内容
      **/
-    String handlerToken(String parameter, GeneratorMongoCollection generatorMongoCollection);
+    public abstract String handlerToken(String parameter, GeneratorMongoCollection generatorMongoCollection);
+
+
 
 
 }
