@@ -31,10 +31,11 @@ public class MongoParsing {
 
     private final static int ARRAY_TYPE = 4;
 
+    private final static int MAX_COUNT = 200000;
 
     public MongoParsing(MongoCollection<Document> collection, int scanCount) {
         this.collection = collection;
-        this.scanCount = scanCount > 400000 ? 400000 : scanCount;
+        this.scanCount = scanCount > MAX_COUNT ? MAX_COUNT : scanCount;
     }
 
     public GeneratorModel process() {
@@ -52,17 +53,17 @@ public class MongoParsing {
      */
     public List<String> groupAggregation(Integer skip, Integer limit) throws MongoCommandException {
         if (skip == null) skip = 0;
-        if (limit == null) limit = 400000;
+        if (limit == null) limit = scanCount;
         MongoCollection<Document> collection = this.collection;
         BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$$ROOT")));
         BasicDBObject $unwind = new BasicDBObject("$unwind", "$arrayofkeyvalue");
         BasicDBObject $skip = new BasicDBObject("$skip", skip);
         BasicDBObject $limit = new BasicDBObject("$limit", limit);
-        BasicDBObject basicDBObject = new BasicDBObject("_id", "null");
-        basicDBObject.append("allkeys", new BasicDBObject("$addToSet", "$arrayofkeyvalue.k"));
-        BasicDBObject $group = new BasicDBObject("$group", basicDBObject);
+        BasicDBObject filed = new BasicDBObject("_id", "null");
+        filed.append("allkeys", new BasicDBObject("$addToSet", "$arrayofkeyvalue.k"));
+        BasicDBObject $group = new BasicDBObject("$group", filed);
         List<BasicDBObject> dbStages = Arrays.asList($project, $skip, $limit, $unwind, $group);
-        //System.out.println(dbStages);  发送的聚合函数   获得所有参数名称
+        // System.out.println(dbStages);  发送的聚合函数   获得所有参数名称
         AggregateIterable<Document> aggregate = collection.aggregate(dbStages);
         Document document = aggregate.first();
         if (document == null) {
@@ -98,7 +99,7 @@ public class MongoParsing {
             unwindName = parameterName.split("\\.")[0];
         }
         Document unwind = new Document("$unwind", "$" + unwindName);
-        Document limit = new Document("$limit", 1);
+        Document limit = new Document("$limit", 3000);
         Document project = new Document("$project", new Document("list", "$" + parameterName).append("_id", false));
         Document unwind2 = new Document("$unwind", "$list");
         AggregateIterable<Document> aggregate = this.collection.aggregate(Arrays.asList(match, unwind, limit, project, unwind2));
@@ -196,7 +197,6 @@ public class MongoParsing {
     public void initColNames() {
         long start = System.currentTimeMillis();
         int scan = this.scanCount;
-        if (scan < 400000) scan = 400000;
         long count = this.collection.countDocuments();
         ForkJoinPool pool = new ForkJoinPool();
         ForkJoinTask<List<String>> task;
@@ -262,7 +262,7 @@ public class MongoParsing {
     class ForkJoinGetProcessName extends RecursiveTask<List<String>> {
         private int begin; //查询开始位置
         private int end;
-        private final int THRESHOLD = 130000;
+        private final int THRESHOLD = 5000;
 
         ForkJoinGetProcessName(int begin, int end) {
             this.begin = begin;
