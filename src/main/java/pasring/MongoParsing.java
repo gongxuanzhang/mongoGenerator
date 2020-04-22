@@ -1,46 +1,35 @@
 package pasring;
-
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.log.model.Type;
-import common.util.StringUtils;
+import common.util.CollectionUtils;
 import model.GeneratorFileInfo;
 import model.GeneratorModel;
+import org.apache.log4j.Logger;
 import org.bson.Document;
-
-import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: gxz
  * @email : 514190950@qq.com
  **/
 public class MongoParsing {
+    private static Logger logger = Logger.getLogger(MongoParsing.class);
 
     final private MongoCollection<Document> collection;
 
     final private int scanCount;
 
     private List<String> colNames;
-    private List<GeneratorModel> generatorModel;
 
-    private String mongoTemplateName;
-    private ExecutorService generatorPool = new ThreadPoolExecutor(5,
-            Runtime.getRuntime().availableProcessors() * 2,
-            300L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(1024),
-            Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy()
-    );
     private final static int[] TYPE = {3, 16, 18, 8, 9, 2, 1};
+
     private final static int ARRAY_TYPE = 4;
-    private List<GeneratorFileInfo> generatorFileInfo = new ArrayList<>();
 
 
     public MongoParsing(MongoCollection<Document> collection, int scanCount) {
@@ -52,8 +41,7 @@ public class MongoParsing {
         //初始化
         initColNames();
         //解析属性值
-        GeneratorModel generatorModel = processParameter();
-        return generatorModel;
+        return processType();
     }
 
     /**
@@ -64,7 +52,7 @@ public class MongoParsing {
      */
     public List<String> groupAggregation(Integer skip, Integer limit) throws MongoCommandException {
         if (skip == null) skip = 0;
-        if (limit == null) limit = 100000;
+        if (limit == null) limit = 400000;
         MongoCollection<Document> collection = this.collection;
         BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$$ROOT")));
         BasicDBObject $unwind = new BasicDBObject("$unwind", "$arrayofkeyvalue");
@@ -115,7 +103,6 @@ public class MongoParsing {
      * @return 返回这个属性内的所有属性名
      */
     public Set<String> getNextParameterNames(String parameterName) {
-        long l = System.currentTimeMillis();
         Document condition = new Document(parameterName, new Document("$exists", true));
         Document match = new Document("$match", condition);
         String unwindName = parameterName;
@@ -123,7 +110,7 @@ public class MongoParsing {
             unwindName = parameterName.split("\\.")[0];
         }
         Document unwind = new Document("$unwind", "$" + unwindName);
-        Document limit = new Document("$limit", 5000);
+        Document limit = new Document("$limit", 1);
         Document project = new Document("$project", new Document("list", "$" + parameterName).append("_id", false));
         Document unwind2 = new Document("$unwind", "$list");
         AggregateIterable<Document> aggregate = this.collection.aggregate(Arrays.asList(match, unwind, limit, project, unwind2));
@@ -135,66 +122,10 @@ public class MongoParsing {
                 names.addAll(documentNames);
             }
         }
-        System.out.println("解析"+parameterName+(System.currentTimeMillis()-l)+"毫秒");
+        logger.info("解析"+parameterName+"有"+names.size()+"个子属性");
         return names;
     }
 
-
-    /**
-     * 功能描述:集合中是对象的属性值 专用
-     *
-     * @author: gxz
-     * @date: 2019/7/4 16:24
-     */
-    private List<String> groupAggregationListObj(Integer skip, Integer limit, String proName) throws MongoCommandException {
-        if (StringUtils.isEmpty(proName)) proName = "$ROOT";
-        if (skip == null) skip = 0;
-        if (limit == null) limit = 100000;
-        MongoCollection<Document> collection = this.collection;
-        String name = proName.split("\\.")[0];
-        BasicDBObject $unwind = new BasicDBObject("$unwind", "$" + name);
-        BasicDBObject $skip = new BasicDBObject("$skip", skip);
-        BasicDBObject $limit = new BasicDBObject("$limit", limit);
-        BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$" + proName)));
-        BasicDBObject $unwind1 = new BasicDBObject("$unwind", "$arrayofkeyvalue");
-        BasicDBObject basicDBObject = new BasicDBObject("_id", "null");
-        basicDBObject.append("allkeys", new BasicDBObject("$addToSet", "$arrayofkeyvalue.k"));
-        BasicDBObject $group = new BasicDBObject("$group", basicDBObject);
-        List<BasicDBObject> dbStages = Arrays.asList($unwind, $skip, $limit, $project, $unwind1, $group);
-        //System.out.println(dbStages);  发送的聚合函数   获得所有参数名称
-        AggregateIterable<Document> aggregate = collection.aggregate(dbStages);
-        Document document = aggregate.first();
-        return (List<String>) document.get("allkeys");
-    }
-
-    private List<String> listChlidProName(String listName) {
-        MongoCollection<Document> collection = this.collection;
-        BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", "$" + listName));
-        BasicDBObject $limit = new BasicDBObject("$limit", 100000);
-        BasicDBObject $unwind = new BasicDBObject("$unwind", "$arrayofkeyvalue");
-        BasicDBObject basicDBObject = new BasicDBObject("_id", "null");
-        basicDBObject.append("allkeys", new BasicDBObject("$addToSet", "$arrayofkeyvalue"));
-        BasicDBObject $group = new BasicDBObject("$group", basicDBObject);
-        List<BasicDBObject> dbStages = Arrays.asList($project, $limit, $unwind, $group);
-        System.out.println(dbStages);
-        //System.out.println(dbStages);  发送的聚合函数   获得所有参数名称
-        AggregateIterable<Document> aggregate = collection.aggregate(dbStages);
-        Document first = aggregate.first();
-        List<Document> listKeyValue = (List<Document>) first.get("allkeys");
-        int index = 0;
-        Document max = null;
-        for (Document document : listKeyValue) {
-            if (document.size() > index) {
-                index = document.size();
-                max = document;
-            }
-        }
-        return new ArrayList<>(max.keySet());
-    }
-
-    public List<String> groupAggregationListObj(String proName) {
-        return groupAggregationListObj(null, null, proName);
-    }
 
 
     /**
@@ -208,8 +139,6 @@ public class MongoParsing {
      */
 
     public GeneratorModel processNameType(String propertyName) {
-        // System.out.println(Thread.currentThread().getName() + "启动    执行[" + propertyName + "]的操作");
-        long l = System.currentTimeMillis();
         MongoCollection<Document> collection = this.collection;
         GeneratorModel result = new GeneratorModel();
         if ("_id".equals(propertyName)) {
@@ -220,7 +149,6 @@ public class MongoParsing {
         result.setPropertyName(propertyName);
         MongoCursor<Document> isArray = collection.find(new Document(propertyName, new Document("$type", ARRAY_TYPE))).limit(1).iterator();
         if (isArray.hasNext()) {
-            System.out.println("解析到" + propertyName + "是数组");
             result.setArray(true);
             for (int i : TYPE) {
                 MongoCursor<Document> iterator = collection.find(new Document(propertyName, new Document("$type", i))).limit(1).iterator();
@@ -230,7 +158,7 @@ public class MongoParsing {
                     }
                     //1是double 2是string 3是对象 4是数组 16是int 18 是long
                     result.setType(i);
-                    System.out.println("解析类型"+propertyName+"["+Type.typeInfo(result.getType())+"]"+(System.currentTimeMillis()-l)+"毫秒");
+                    logger.info("解析["+propertyName+"]是[List]["+Type.typeInfo(result.getType())+"]");
                     return result;
                 }
             }
@@ -239,31 +167,29 @@ public class MongoParsing {
                 MongoCursor<Document> iterator = collection.find(new Document(propertyName, new Document("$type", i))).limit(1).iterator();
                 if (iterator.hasNext()) {
                     if (i == 3) {
-                        System.out.println("解析到" + propertyName + "是对象");
                         result.setChild(this.produceChildList(propertyName));
                     }
                     //1是double 2是string 3是对象 4是数组 16是int 18 是long
                     //到这里就是数组了
                     result.setType(i);
-                    System.out.println("解析类型"+propertyName+"["+Type.typeInfo(result.getType())+"]"+(System.currentTimeMillis()-l)+"毫秒");
+                    logger.info("解析["+propertyName+"]是["+Type.typeInfo(result.getType())+"]");
                     return result;
                 }
             }
             result.setType(2);
         }
-        System.out.println("解析类型"+propertyName+"["+Type.typeInfo(result.getType())+"]"+(System.currentTimeMillis()-l)+"毫秒");
+        logger.info("解析["+propertyName+"]是["+Type.typeInfo(result.getType())+"]");
         return result;
     }
 
 
     private List<GeneratorModel> produceChildList(String parentName) {
         Set<String> nextParameterNames = this.getNextParameterNames(parentName);
-        List<GeneratorModel> childrenList = new ArrayList<>();
-        for (String nextParameterName : nextParameterNames) {
-            GeneratorModel generatorModel = this.processNameType(parentName+"."+nextParameterName);
-            childrenList.add(generatorModel);
-        }
-        return childrenList;
+        List<String> strings = new ArrayList<>(nextParameterNames);
+        List<String> collect = strings.stream().map(name -> parentName + "." + name).collect(Collectors.toList());
+        ForkJoinPool pool = new ForkJoinPool();
+        ForkJoinTask<List<GeneratorModel>> task = new ForkJoinProcessType(collect);
+        return pool.invoke(task);
     }
 
     private List<String> distinctAndJoin(List<String> a, List<String> b) {
@@ -272,20 +198,6 @@ public class MongoParsing {
         return a;
     }
 
-    private static String nameToJavaName(String name) {
-        String first = name.substring(0, 1).toUpperCase();
-        String end = name.substring(1);
-        String result = first + end;
-        while (result.contains("_")) {
-            int i = result.indexOf("_");
-            String before = result.substring(0, i);
-            String after = result.substring(i + 1);
-            String upperCase = after.substring(0, 1).toUpperCase();
-            after = upperCase + after.substring(1);
-            result = before + after;
-        }
-        return result;
-    }
 
     /**
      * 功能描述:解析这个集合的列名  用ForkJoin框架实现
@@ -306,10 +218,53 @@ public class MongoParsing {
             task = new ForkJoinGetProcessName(0, (int) count);
         }
         this.colNames = pool.invoke(task);
-        System.out.println("collection[" + this.collection.getNamespace().getCollectionName() +
+        logger.info("collection[" + this.collection.getNamespace().getCollectionName() +
                 "]初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
     }
 
+    public GeneratorModel processType() {
+        GeneratorModel result = new GeneratorModel();
+        List<String> colNames = this.colNames;
+        ForkJoinPool pool = new ForkJoinPool();
+        ForkJoinTask<List<GeneratorModel>> task = new ForkJoinProcessType(colNames);
+        List<GeneratorModel> invoke = pool.invoke(task);
+        return result.setChild(invoke).setType(3).setPropertyName(this.collection.getNamespace().getCollectionName());
+    }
+
+    /**
+     * 功能描述:forkJoin多线程框架的实现  通过业务拆分解析类型
+     *
+     * @author: gxz
+     */
+    class ForkJoinProcessType extends RecursiveTask<List<GeneratorModel>> {
+        List<String> names;
+        private final int THRESHOLD = 4;
+
+        ForkJoinProcessType(List<String> names) {
+            this.names = names;
+        }
+
+        @Override
+        protected List<GeneratorModel> compute() {
+            if (names.size() <= THRESHOLD) {
+                List<GeneratorModel> result = new ArrayList<>();
+                for (String name : names) {
+                    result.add(processNameType(name));
+                }
+                return result;
+            } else {
+                int size = names.size();
+                int middle = size / 2;
+                List<String> leftList = names.subList(0, middle);
+                List<String> rightList = names.subList(middle, size);
+                ForkJoinProcessType pre = new ForkJoinProcessType(leftList);
+                pre.fork();
+                ForkJoinProcessType next = new ForkJoinProcessType(rightList);
+                next.fork();
+                return CollectionUtils.mergeList(pre.join(), next.join());
+            }
+        }
+    }
 
     /**
      * 功能描述:forkJoin多线程框架的实现  通过业务拆分获得属性名

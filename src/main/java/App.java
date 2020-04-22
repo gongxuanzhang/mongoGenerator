@@ -32,9 +32,7 @@ public class App {
                 MongoNamespace namespace = value.getNamespace();
                 System.out.println("数据库["+namespace.getDatabaseName()+"]表["+namespace.getCollectionName()+"]有"+value.countDocuments()+"条记录");
                 MongoParsing mongoParsing = new MongoParsing(value,400000);
-                //Set<String> a = mongoParsing.getNextParameterNames("eventdata.extension");
-                GeneratorModel clientlocation = mongoParsing.processNameType("clientlocation");
-                //GeneratorModel generatorModel = mongoParsing.process();
+                GeneratorModel generatorModel = mongoParsing.process();
                 System.out.println(1);
             }
         }
