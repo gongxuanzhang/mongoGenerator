@@ -1,6 +1,4 @@
-import com.mongodb.MongoClient;
 import com.mongodb.MongoNamespace;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import common.factory.GeneratorModelAnalysisFactory;
 import model.GeneratorModel;
@@ -12,6 +10,7 @@ import pasring.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author gxz
@@ -33,9 +32,10 @@ public class App {
                 MongoNamespace namespace = value.getNamespace();
                 System.out.println("数据库["+namespace.getDatabaseName()+"]表["+namespace.getCollectionName()+"]有"+value.countDocuments()+"条记录");
                 MongoParsing mongoParsing = new MongoParsing(value,400000);
-                List<String> strings = mongoParsing.groupAggregation(null, 500000, null);
-                GeneratorModel generatorModel = mongoParsing.processName("a.b.c.d.pp");
-                System.out.println(strings);
+                //Set<String> a = mongoParsing.getNextParameterNames("eventdata.extension");
+                GeneratorModel clientlocation = mongoParsing.processNameType("clientlocation");
+                //GeneratorModel generatorModel = mongoParsing.process();
+                System.out.println(1);
             }
         }
     }

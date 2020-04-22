@@ -8,11 +8,13 @@ import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import common.log.model.Type;
 import common.util.StringUtils;
 import model.GeneratorFileInfo;
 import model.GeneratorModel;
 import org.bson.Document;
 
+import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -43,30 +45,28 @@ public class MongoParsing {
 
     public MongoParsing(MongoCollection<Document> collection, int scanCount) {
         this.collection = collection;
-        this.scanCount = scanCount > 1000000 ? 1000000 : scanCount;
-
+        this.scanCount = scanCount > 400000 ? 400000 : scanCount;
     }
 
-    public void process() {
+    public GeneratorModel process() {
         //初始化
         initColNames();
         //解析属性值
-
-
+        GeneratorModel generatorModel = processParameter();
+        return generatorModel;
     }
 
     /**
      * 功能描述:分组发送聚合函数(获得一级属性名)
      *
-     * @author: gxz
-     * @date: 2019/7/4 16:24
+     * @author : gxz
+     * @date : 2019/7/4 16:24
      */
-    public List<String> groupAggregation(Integer skip, Integer limit, String proName) throws MongoCommandException {
-        if (StringUtils.isEmpty(proName)) proName = "$ROOT";
+    public List<String> groupAggregation(Integer skip, Integer limit) throws MongoCommandException {
         if (skip == null) skip = 0;
         if (limit == null) limit = 100000;
         MongoCollection<Document> collection = this.collection;
-        BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$" + proName)));
+        BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$$ROOT")));
         BasicDBObject $unwind = new BasicDBObject("$unwind", "$arrayofkeyvalue");
         BasicDBObject $skip = new BasicDBObject("$skip", skip);
         BasicDBObject $limit = new BasicDBObject("$limit", limit);
@@ -78,12 +78,12 @@ public class MongoParsing {
         AggregateIterable<Document> aggregate = collection.aggregate(dbStages);
         Document document = aggregate.first();
         if (document == null) {
-            BasicDBObject existsQuery = new BasicDBObject(proName, new BasicDBObject("$exists", true));
+            BasicDBObject existsQuery = new BasicDBObject("$ROOT", new BasicDBObject("$exists", true));
             MongoCursor<Document> existsList = collection.find(existsQuery).limit(100).iterator();
             Set<String> keySet = new HashSet<>();
             while (existsList.hasNext()) {
                 Document next = existsList.next();
-                Map<String, Object> keyMap = (Map<String, Object>) next.get(proName);
+                Map<String, Object> keyMap = (Document) next.get("$ROOT");
                 keySet.addAll(keyMap.keySet());
             }
             return new ArrayList<>(keySet);
@@ -93,36 +93,50 @@ public class MongoParsing {
 
     }
 
+    public GeneratorModel processParameter() {
+        GeneratorModel result = new GeneratorModel();
+        result.setPropertyName(this.collection.getNamespace().getCollectionName());
+        result.setType(3).setArray(false);
+        List<String> colNames = this.colNames;
+        List<GeneratorModel> children = new ArrayList<>();
+        for (String colName : colNames) {
+            GeneratorModel generatorModel = this.processNameType(colName);
+            children.add(generatorModel);
+        }
+        return result.setChild(children);
+    }
+
     /**
-     * 如果一个文档是对象类型 递归取出内容
-     * @param parameterName 对象类型的参数名称比如 a.b   这个参数至少包含一个"."
-     * @param isArray 这个列表是否是数组  需要上层判断  这个参数很重要
-     * @return 把这个属性极其所有子类全都封装成GeneratorModel 传递给上层 作为上层的children
+     * 如果一个文档是对象类型  获得这个属性的下一级的属性名的集合
+     * 例子: user:{name:"张三",age:12}  传入user  返回[name,age]
+     *
+     * @param parameterName 上层参数名  这个参数名可以包含一个或多个.
+     *                      注: 参数传递之前需确认:  1.上层属性一定是对象类型
+     * @return 返回这个属性内的所有属性名
      */
-    public GeneratorModel innerParameterProcess(String parameterName, boolean isArray) {
-        GeneratorModel generatorModel = new GeneratorModel();
-        Document query = new Document(parameterName, new Document("$exists", true));
-        Document filed = new Document("_id", 0).append(parameterName, 1);
-        FindIterable<Document> innerDocuments = this.collection.find(query).projection(filed).limit(this.scanCount);
-        String parentParameterName = parameterName;
-        //返回的结果一定是最外层属性名  比如我查询的是 a.b   但是返回值的key也是a  值里面有b
-        String[] split = parameterName.split("\\.");
-        parentParameterName = split[0];
-        generatorModel.setPropertyName(split[split.length-1]);
-        Set<String> innerParameterNames = new HashSet<>();
-        for (Document innerDocument : innerDocuments) {
-            if(isArray){
-                JSONArray jsonArray = new JSONObject(innerDocument).getJSONArray(parentParameterName);
-                for (Object jsonObject : jsonArray) {
-                    JSONObject document = (JSONObject) jsonObject;
-                    innerParameterNames.addAll(document.keySet());
-                }
-            }else{
-                JSONObject jsonObject = new JSONObject(innerDocument);
-                innerParameterNames.addAll(jsonObject.keySet());
+    public Set<String> getNextParameterNames(String parameterName) {
+        long l = System.currentTimeMillis();
+        Document condition = new Document(parameterName, new Document("$exists", true));
+        Document match = new Document("$match", condition);
+        String unwindName = parameterName;
+        if (parameterName.contains(".")) {
+            unwindName = parameterName.split("\\.")[0];
+        }
+        Document unwind = new Document("$unwind", "$" + unwindName);
+        Document limit = new Document("$limit", 5000);
+        Document project = new Document("$project", new Document("list", "$" + parameterName).append("_id", false));
+        Document unwind2 = new Document("$unwind", "$list");
+        AggregateIterable<Document> aggregate = this.collection.aggregate(Arrays.asList(match, unwind, limit, project, unwind2));
+        Set<String> names = new HashSet<>();
+        for (Document document : aggregate) {
+            Object list = document.get("list");
+            if (list instanceof Map) {
+                Set<String> documentNames = ((Document) list).keySet();
+                names.addAll(documentNames);
             }
         }
-        return null;
+        System.out.println("解析"+parameterName+(System.currentTimeMillis()-l)+"毫秒");
+        return names;
     }
 
 
@@ -162,6 +176,7 @@ public class MongoParsing {
         basicDBObject.append("allkeys", new BasicDBObject("$addToSet", "$arrayofkeyvalue"));
         BasicDBObject $group = new BasicDBObject("$group", basicDBObject);
         List<BasicDBObject> dbStages = Arrays.asList($project, $limit, $unwind, $group);
+        System.out.println(dbStages);
         //System.out.println(dbStages);  发送的聚合函数   获得所有参数名称
         AggregateIterable<Document> aggregate = collection.aggregate(dbStages);
         Document first = aggregate.first();
@@ -177,21 +192,14 @@ public class MongoParsing {
         return new ArrayList<>(max.keySet());
     }
 
-    private List<String> groupAggregationListObj(String proName) {
+    public List<String> groupAggregationListObj(String proName) {
         return groupAggregationListObj(null, null, proName);
-    }
-
-    private List<String> groupAggregation(Integer skip, Integer limit) {
-        return groupAggregation(skip, limit, null);
-    }
-
-    private List<String> groupAggregation(String proName) {
-        return groupAggregation(null, null, proName);
     }
 
 
     /**
-     * 功能描述:提供属性名 获取相应的属性信息  封装成generator对象
+     * 功能描述:提供属性名 解析属性类型
+     * 获取相应的属性信息  封装成generator对象
      *
      * @author: gxz
      * @param: propertyName属性名 可以是层级名  比如 name 也可以是info.name
@@ -199,8 +207,9 @@ public class MongoParsing {
      * @see GeneratorModel
      */
 
-    public GeneratorModel processName(String propertyName) {
-        System.out.println(Thread.currentThread().getName() + "启动    执行[" + propertyName + "]的操作");
+    public GeneratorModel processNameType(String propertyName) {
+        // System.out.println(Thread.currentThread().getName() + "启动    执行[" + propertyName + "]的操作");
+        long l = System.currentTimeMillis();
         MongoCollection<Document> collection = this.collection;
         GeneratorModel result = new GeneratorModel();
         if ("_id".equals(propertyName)) {
@@ -217,11 +226,11 @@ public class MongoParsing {
                 MongoCursor<Document> iterator = collection.find(new Document(propertyName, new Document("$type", i))).limit(1).iterator();
                 if (iterator.hasNext()) {
                     if (i == 3) {
-                        System.out.println("解析到" + propertyName + "是对象");
-                        result.setChild(produceChildList(propertyName));
+                        result.setChild(this.produceChildList(propertyName));
                     }
                     //1是double 2是string 3是对象 4是数组 16是int 18 是long
                     result.setType(i);
+                    System.out.println("解析类型"+propertyName+"["+Type.typeInfo(result.getType())+"]"+(System.currentTimeMillis()-l)+"毫秒");
                     return result;
                 }
             }
@@ -231,61 +240,30 @@ public class MongoParsing {
                 if (iterator.hasNext()) {
                     if (i == 3) {
                         System.out.println("解析到" + propertyName + "是对象");
+                        result.setChild(this.produceChildList(propertyName));
                     }
                     //1是double 2是string 3是对象 4是数组 16是int 18 是long
                     //到这里就是数组了
                     result.setType(i);
+                    System.out.println("解析类型"+propertyName+"["+Type.typeInfo(result.getType())+"]"+(System.currentTimeMillis()-l)+"毫秒");
                     return result;
                 }
             }
             result.setType(2);
         }
-        System.out.println(propertyName + "解析完成");
+        System.out.println("解析类型"+propertyName+"["+Type.typeInfo(result.getType())+"]"+(System.currentTimeMillis()-l)+"毫秒");
         return result;
     }
 
-    private List<GeneratorModel> produceChildObject(String parentName) {
-        List<GeneratorModel> result = new ArrayList<>();
-        List<String> childNames = null;
-        try {
-            childNames = groupAggregation(parentName);
-        } catch (MongoCommandException e) {
-            try {
-                childNames = listChlidProName(parentName);
-            } catch (MongoCommandException ee) {
-                System.out.println("需要手动添加" + parentName);
-                return result;
-            }
-            for (String childName : childNames) {
-                GeneratorModel generatorModel = processName(parentName + "." + childName);
-                result.add(generatorModel);
-            }
-            return result;
-        }
-        for (String childName : childNames) {
-            GeneratorModel generatorModel = processName(parentName + "." + childName);
-            result.add(generatorModel);
-        }
-        return result;
-    }
 
     private List<GeneratorModel> produceChildList(String parentName) {
-        List<GeneratorModel> result = new ArrayList<>();
-        List<String> childNames = new ArrayList<>();
-        try {
-            childNames = groupAggregationListObj(parentName);
-        } catch (MongoCommandException m) {
-            System.out.println(parentName + "需要手动添加");
-            for (String childName : childNames) {
-                GeneratorModel generatorModel = processName(parentName + "." + childName);
-                result.add(generatorModel);
-            }
+        Set<String> nextParameterNames = this.getNextParameterNames(parentName);
+        List<GeneratorModel> childrenList = new ArrayList<>();
+        for (String nextParameterName : nextParameterNames) {
+            GeneratorModel generatorModel = this.processNameType(parentName+"."+nextParameterName);
+            childrenList.add(generatorModel);
         }
-        for (String childName : childNames) {
-            GeneratorModel generatorModel = processName(parentName + "." + childName);
-            result.add(generatorModel);
-        }
-        return result;
+        return childrenList;
     }
 
     private List<String> distinctAndJoin(List<String> a, List<String> b) {
@@ -334,10 +312,9 @@ public class MongoParsing {
 
 
     /**
-     * 功能描述:forkJoin多线程框架的实现  通过业务拆分获得属性名 一般需要12秒左右
+     * 功能描述:forkJoin多线程框架的实现  通过业务拆分获得属性名
      *
      * @author: gxz
-     * @date:
      */
     class ForkJoinGetProcessName extends RecursiveTask<List<String>> {
         private int begin; //查询开始位置
