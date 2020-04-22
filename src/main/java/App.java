@@ -19,13 +19,8 @@ import java.util.Set;
 public class App {
     public static void main(String[] args) {
         List<GeneratorMongoConnection> analyze = DataBaseParsing.resolver().analyze();
-
-        GeneratorMongoDatabase generatorMongoDatabase1 = analyze.get(0).getDatabases().get(0);
-        GeneratorMongoCollection collection = generatorMongoDatabase1.getGeneratorMongoCollections().get(0);
-        String content = collection.getTemplates().get(0).getContent();
         GenericTokenParser genericTokenParser = new GenericTokenParser();
         TemplateParsing templateParsing = new DefaultTemplateParsing("#{","}",genericTokenParser);
-        System.out.println(templateParsing.analyzeContent(content,collection));
         for (GeneratorMongoConnection generatorMongoConnection : analyze) {
             Map<GeneratorMongoCollection, MongoCollection<Document>> mongoCollection = GeneratorModelAnalysisFactory.getMongoCollection(generatorMongoConnection);
             for (MongoCollection<Document> value : mongoCollection.values()) {
