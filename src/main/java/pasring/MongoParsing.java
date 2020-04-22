@@ -8,7 +8,8 @@ import common.log.model.Type;
 import common.util.CollectionUtils;
 import model.GeneratorFileInfo;
 import model.GeneratorModel;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import java.util.*;
 import java.util.concurrent.*;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  * @email : 514190950@qq.com
  **/
 public class MongoParsing {
-    private static Logger logger = Logger.getLogger(MongoParsing.class);
+    private static Logger logger = LogManager.getLogger(MongoParsing.class);
 
     final private MongoCollection<Document> collection;
 
