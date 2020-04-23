@@ -1,11 +1,12 @@
 import com.mongodb.client.MongoCollection;
 import common.factory.GeneratorModelAnalysisFactory;
-import common.util.Writer;
+import writer.BeanWriter;
 import model.GeneratorModel;
 import model.mongo.GeneratorMongoCollection;
 import model.mongo.GeneratorMongoConnection;
 import org.bson.Document;
 import pasring.*;
+import writer.Writer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,7 +20,8 @@ import java.util.Map;
 public class App {
     public static void main(String[] args) throws IOException {
         List<GeneratorModel> init = init();
-        Writer.generator(init);
+        Writer beanWriter = new BeanWriter();
+        beanWriter.generator(init);
     }
 
 

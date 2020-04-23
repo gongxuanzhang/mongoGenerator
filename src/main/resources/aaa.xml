@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <myGenerator>
-    <mongo  host="localhost" port="27017" auth="false" username="tincery" password="Txy123.com"
+    <mongo  host="172.16.1.102" port="27017" auth="true" username="tincery" password="Txy123.com"
            source="secret_reconnaissance_pro">
-        <database name="tincery_pro" beanClose="BO">
-            <collection name="alarm" scannerCount="100000"   package="model.gen" innerPackage="model.gen" template="t1,t2"/>
-            <collection name="email" scannerCount="100000" beanClose="DTO"  package="model.gen" innerPackage="model.gen" template="t1,t2"/>
+        <database name="secret_reconnaissance_pro" beanClose="BO">
+            <collection name="innerAuth" scannerCount="100000"   package="model.gen" innerPackage="model.gen" template="t1,t2"/>
         </database>
     </mongo>
 

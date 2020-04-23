@@ -27,11 +27,13 @@ public class GeneratorModel implements Serializable {
 
     private String path;
 
+    private String innerPath;
+
     private List<Template> template;
 
 
     public boolean hasChild(){
-        final int objectType = 2;
+        final int objectType = 3;
         return Objects.equals(type,objectType) || CollectionUtils.isNotEmpty(child);
     }
 
@@ -43,6 +45,8 @@ public class GeneratorModel implements Serializable {
                     = templateParsing.analyzeContent(template.getContent(), generatorMongoCollection);
             template.setContent(templateContent);
         }
+        this.setPath(generatorMongoCollection.getPrimaryPackage());
+        this.setInnerPath(generatorMongoCollection.getInnerPackage());
         this.setTemplate(generatorMongoCollection.getTemplates());
     }
 
@@ -65,6 +69,15 @@ public class GeneratorModel implements Serializable {
 
     public GeneratorModel setPath(String path) {
         this.path = path;
+        return this;
+    }
+
+    public String getInnerPath() {
+        return innerPath;
+    }
+
+    public GeneratorModel setInnerPath(String innerPath) {
+        this.innerPath = innerPath;
         return this;
     }
 

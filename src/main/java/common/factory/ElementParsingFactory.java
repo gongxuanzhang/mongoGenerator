@@ -31,8 +31,8 @@ public class ElementParsingFactory {
          int scannerCount = StringUtils.isEmpty(scannerCountFromXML)?400000:Integer.valueOf(scannerCountFromXML);
          result.setName(name).setScannerCount(scannerCount);
 
-         String repetitionStrategyFromXML = element.attributeValue("repetitionStrategyEnum");
-         String nameStrategyFromXML = element.attributeValue("nameStrategyEnum");
+         String beanClose = element.attributeValue("beanClose");
+         result.setBeanClose(StringUtils.isEmpty(beanClose)?"BO":beanClose);
          //复杂实体的生成路径 如果没填写 默认是主包路径
          result.setPrimaryPackage(primaryPackage);
          String innerPackage = element.attributeValue("innerPackage");

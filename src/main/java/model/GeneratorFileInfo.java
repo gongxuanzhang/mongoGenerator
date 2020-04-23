@@ -6,7 +6,18 @@ package model;
  **/
 public class GeneratorFileInfo {
     private String filePath;
+    private String fileName;
     private String content;
+
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public GeneratorFileInfo setFileName(String fileName) {
+        this.fileName = fileName;
+        return this;
+    }
 
     public String getFilePath() {
         return filePath;
