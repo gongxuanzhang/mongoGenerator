@@ -1,6 +1,7 @@
 package common.factory;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
@@ -36,15 +37,16 @@ public class GeneratorModelAnalysisFactory {
         //ServerAddress()两个参数分别为 服务器地址 和 端口
         ServerAddress serverAddress = new ServerAddress(connection.getHost(), connection.getPort());
         adds.add(serverAddress);
-        List<MongoCredential> credentials = new ArrayList<>();
-        //MongoCredential.createScramSha1Credential()三个参数分别为 用户名 数据库名称 密码
+
+        // MongoCredential.createScramSha1Credential()三个参数分别为 用户名 数据库名称 密码
         if(connection.isAuth()){
             MongoCredential mongoCredential
                     = MongoCredential.createScramSha1Credential(connection.getUsername(), connection.getSource(), connection.getPassword().toCharArray());
-            credentials.add(mongoCredential);
+            MongoClientOptions mongoClientOptions = MongoClientOptions.builder().build();
+            // 通过连接认证获取MongoDB连接
+            return new MongoClient(adds,mongoCredential,mongoClientOptions);
         }
-        //通过连接认证获取MongoDB连接
-        return new MongoClient(adds, credentials);
+        return new MongoClient(adds);
     }
     public static Map<GeneratorMongoCollection, MongoCollection<Document>> getMongoCollection
             (GeneratorMongoConnection connection){

@@ -13,6 +13,4 @@ public interface TemplateParsing {
 
     String analyzeContent(String content, GeneratorMongoCollection generatorMongoCollection);
 
-    String analyzeContent(Template template, GeneratorMongoCollection generatorMongoCollection);
-
 }

@@ -2,6 +2,7 @@ package common.util;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author: gxz
@@ -16,6 +17,12 @@ public class CollectionUtils {
     public static boolean isNotEmpty(Collection coll) {
         return !isEmpty(coll);
     }
+
+    public static <T> List<T> mergeList(List<T> list1, List<T> list2){
+            list1.addAll(list2);
+            return list1;
+    }
+
 
     public static void main(String[] args) throws IOException {
 

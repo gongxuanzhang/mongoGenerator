@@ -9,7 +9,7 @@ import java.util.List;
 public class GeneratorMongoDatabase {
         private String name;
         private List<GeneratorMongoCollection> generatorMongoCollections;
-
+        private String beanClose;
 
     public String getName() {
         return name;
@@ -26,6 +26,15 @@ public class GeneratorMongoDatabase {
 
     public GeneratorMongoDatabase setGeneratorMongoCollections(List<GeneratorMongoCollection> generatorMongoCollections) {
         this.generatorMongoCollections = generatorMongoCollections;
+        return this;
+    }
+
+    public String getBeanClose() {
+        return beanClose;
+    }
+
+    public GeneratorMongoDatabase setBeanClose(String beanClose) {
+        this.beanClose = beanClose;
         return this;
     }
 }

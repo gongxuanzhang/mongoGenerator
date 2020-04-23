@@ -13,26 +13,13 @@ public class GeneratorMongoCollection {
     private String databaseName;
     private String name;
     private Integer scannerCount;
-    private RepetitionStrategy repetitionStrategy;
-    private NameStrategy nameStrategy;
     private String primaryPackage;
     private String innerPackage;
     private List<String> templateNames;
     private List<Template> templates;
+    private String beanClose;
 
 
-
-    @Override
-    public String toString() {
-        return "GeneratorMongoCollection{" +
-                "name='" + name + '\'' +
-                ", scannerCount=" + scannerCount +
-                ", repetitionStrategy=" + repetitionStrategy +
-                ", nameStrategy=" + nameStrategy +
-                ", primaryPackage='" + primaryPackage + '\'' +
-                ", innerPackage='" + innerPackage + '\'' +
-                '}';
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -42,26 +29,16 @@ public class GeneratorMongoCollection {
         return Objects.equals(databaseName, that.databaseName) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(scannerCount, that.scannerCount) &&
-                repetitionStrategy == that.repetitionStrategy &&
-                nameStrategy == that.nameStrategy &&
                 Objects.equals(primaryPackage, that.primaryPackage) &&
                 Objects.equals(innerPackage, that.innerPackage) &&
                 Objects.equals(templateNames, that.templateNames) &&
-                Objects.equals(templates, that.templates);
+                Objects.equals(templates, that.templates) &&
+                Objects.equals(beanClose, that.beanClose);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(databaseName, name, scannerCount, repetitionStrategy, nameStrategy, primaryPackage, innerPackage, templateNames, templates);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public GeneratorMongoCollection setName(String name) {
-        this.name = name;
-        return this;
+        return Objects.hash(databaseName, name, scannerCount, primaryPackage, innerPackage, templateNames, templates, beanClose);
     }
 
     public String getDatabaseName() {
@@ -73,8 +50,40 @@ public class GeneratorMongoCollection {
         return this;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public GeneratorMongoCollection setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public Integer getScannerCount() {
+        return scannerCount;
+    }
+
+    public GeneratorMongoCollection setScannerCount(Integer scannerCount) {
+        this.scannerCount = scannerCount;
+        return this;
+    }
+
     public String getPrimaryPackage() {
         return primaryPackage;
+    }
+
+    public GeneratorMongoCollection setPrimaryPackage(String primaryPackage) {
+        this.primaryPackage = primaryPackage;
+        return this;
+    }
+
+    public String getInnerPackage() {
+        return innerPackage;
+    }
+
+    public GeneratorMongoCollection setInnerPackage(String innerPackage) {
+        this.innerPackage = innerPackage;
+        return this;
     }
 
     public List<String> getTemplateNames() {
@@ -95,45 +104,12 @@ public class GeneratorMongoCollection {
         return this;
     }
 
-    public GeneratorMongoCollection setPrimaryPackage(String primaryPackage) {
-        this.primaryPackage = primaryPackage;
-        return this;
+    public String getBeanClose() {
+        return beanClose;
     }
 
-    public String getInnerPackage() {
-        return innerPackage;
-    }
-
-    public GeneratorMongoCollection setInnerPackage(String innerPackage) {
-        this.innerPackage = innerPackage;
-        return this;
-    }
-
-    public Integer getScannerCount() {
-        return scannerCount;
-    }
-
-    public GeneratorMongoCollection setScannerCount(Integer scannerCount) {
-        this.scannerCount = scannerCount;
-        return this;
-    }
-
-
-    public RepetitionStrategy getRepetitionStrategy() {
-        return repetitionStrategy;
-    }
-
-    public GeneratorMongoCollection setRepetitionStrategy(RepetitionStrategy repetitionStrategy) {
-        this.repetitionStrategy = repetitionStrategy;
-        return this;
-    }
-
-    public NameStrategy getNameStrategy() {
-        return nameStrategy;
-    }
-
-    public GeneratorMongoCollection setNameStrategy(NameStrategy nameStrategy) {
-        this.nameStrategy = nameStrategy;
+    public GeneratorMongoCollection setBeanClose(String beanClose) {
+        this.beanClose = beanClose;
         return this;
     }
 }
