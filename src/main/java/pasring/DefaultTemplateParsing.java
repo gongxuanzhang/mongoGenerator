@@ -1,7 +1,7 @@
 package pasring;
 
 import common.util.StringUtils;
-import model.mongo.GeneratorMongoCollection;
+import model.mongo.CollectionNode;
 
 /**
  * @author: gxz
@@ -30,7 +30,7 @@ public class DefaultTemplateParsing implements TemplateParsing {
 
 
     @Override
-    public String analyzeContent(String content, GeneratorMongoCollection generatorMongoCollection) {
+    public String analyzeContent(String content, CollectionNode collectionNode) {
         if (StringUtils.isEmpty(content.trim())) {
             return null;
         }
@@ -57,7 +57,7 @@ public class DefaultTemplateParsing implements TemplateParsing {
                 offset = src.length;
             } else {
                 expression.append(src, offset, end - offset);
-                builder.append(handler.handlerToken(expression.toString(), generatorMongoCollection));
+                builder.append(handler.handlerToken(expression.toString(), collectionNode));
                 offset = end + closeToken.length();
             }
             start = content.indexOf(openToken, offset);

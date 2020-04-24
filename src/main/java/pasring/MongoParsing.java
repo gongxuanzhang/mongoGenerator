@@ -1,4 +1,5 @@
 package pasring;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.AggregateIterable;
@@ -6,23 +7,23 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.log.model.Type;
 import common.util.CollectionUtils;
-import model.GeneratorModel;
+import model.MongoDefinition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bson.Document;
+
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author: gxz
  * @email : 514190950@qq.com
  **/
 public class MongoParsing {
     private static Logger logger = LogManager.getLogger(MongoParsing.class);
 
-    final private MongoCollection<Document> collection;
+    private MongoCollection<Document> collection;
 
     final private int scanCount;
 
@@ -39,11 +40,14 @@ public class MongoParsing {
         this.scanCount = scanCount > MAX_COUNT ? MAX_COUNT : scanCount;
     }
 
-    public GeneratorModel process() {
+    public MongoDefinition process() {
         //初始化
         initColNames();
         //解析属性值
-        return processType();
+        MongoDefinition mongoDefinition = processType();
+        this.collection = null;
+        return mongoDefinition;
+
     }
 
     /**
@@ -112,10 +116,9 @@ public class MongoParsing {
                 names.addAll(documentNames);
             }
         }
-        logger.info("解析"+parameterName+"有"+names.size()+"个子属性");
+        logger.info("解析" + parameterName + "有" + names.size() + "个子属性");
         return names;
     }
-
 
 
     /**
@@ -124,13 +127,13 @@ public class MongoParsing {
      *
      * @author: gxz
      * @param: propertyName属性名 可以是层级名  比如 name 也可以是info.name
-     * @return: 解析之后的Model {@see #GeneratorModel}
-     * @see GeneratorModel
+     * @return: 解析之后的Model {@see #MongoDefinition}
+     * @see MongoDefinition
      */
 
-    public GeneratorModel processNameType(String propertyName) {
+    public MongoDefinition processNameType(String propertyName) {
         MongoCollection<Document> collection = this.collection;
-        GeneratorModel result = new GeneratorModel();
+        MongoDefinition result = new MongoDefinition();
         if ("_id".equals(propertyName)) {
             result.setType(2);
             result.setPropertyName("_id");
@@ -148,7 +151,7 @@ public class MongoParsing {
                     }
                     //1是double 2是string 3是对象 4是数组 16是int 18 是long
                     result.setType(i);
-                    logger.info("解析["+propertyName+"]是[List]["+Type.typeInfo(result.getType())+"]");
+                    logger.info("解析[" + propertyName + "]是[List][" + Type.typeInfo(result.getType()) + "]");
                     return result;
                 }
             }
@@ -162,23 +165,23 @@ public class MongoParsing {
                     //1是double 2是string 3是对象 4是数组 16是int 18 是long
                     //到这里就是数组了
                     result.setType(i);
-                    logger.info("解析["+propertyName+"]是["+Type.typeInfo(result.getType())+"]");
+                    logger.info("解析[" + propertyName + "]是[" + Type.typeInfo(result.getType()) + "]");
                     return result;
                 }
             }
             result.setType(2);
         }
-        logger.info("解析["+propertyName+"]是["+Type.typeInfo(result.getType())+"]");
+        logger.info("解析[" + propertyName + "]是[" + Type.typeInfo(result.getType()) + "]");
         return result;
     }
 
 
-    private List<GeneratorModel> produceChildList(String parentName) {
+    private List<MongoDefinition> produceChildList(String parentName) {
         Set<String> nextParameterNames = this.getNextParameterNames(parentName);
         List<String> strings = new ArrayList<>(nextParameterNames);
         List<String> collect = strings.stream().map(name -> parentName + "." + name).collect(Collectors.toList());
         ForkJoinPool pool = new ForkJoinPool();
-        ForkJoinTask<List<GeneratorModel>> task = new ForkJoinProcessType(collect);
+        ForkJoinTask<List<MongoDefinition>> task = new ForkJoinProcessType(collect);
         return pool.invoke(task);
     }
 
@@ -211,12 +214,12 @@ public class MongoParsing {
                 "]初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
     }
 
-    public GeneratorModel processType() {
-        GeneratorModel result = new GeneratorModel();
+    public MongoDefinition processType() {
+        MongoDefinition result = new MongoDefinition();
         List<String> colNames = this.colNames;
         ForkJoinPool pool = new ForkJoinPool();
-        ForkJoinTask<List<GeneratorModel>> task = new ForkJoinProcessType(colNames);
-        List<GeneratorModel> invoke = pool.invoke(task);
+        ForkJoinTask<List<MongoDefinition>> task = new ForkJoinProcessType(colNames);
+        List<MongoDefinition> invoke = pool.invoke(task);
         return result.setChild(invoke).setType(3).setPropertyName(this.collection.getNamespace().getCollectionName());
     }
 
@@ -225,7 +228,7 @@ public class MongoParsing {
      *
      * @author: gxz
      */
-    class ForkJoinProcessType extends RecursiveTask<List<GeneratorModel>> {
+    class ForkJoinProcessType extends RecursiveTask<List<MongoDefinition>> {
         List<String> names;
         private final int THRESHOLD = 4;
 
@@ -234,9 +237,9 @@ public class MongoParsing {
         }
 
         @Override
-        protected List<GeneratorModel> compute() {
+        protected List<MongoDefinition> compute() {
             if (names.size() <= THRESHOLD) {
-                List<GeneratorModel> result = new ArrayList<>();
+                List<MongoDefinition> result = new ArrayList<>();
                 for (String name : names) {
                     result.add(processNameType(name));
                 }

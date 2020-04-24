@@ -2,7 +2,7 @@ package pasring;
 
 import common.exception.XMLConfigException;
 import common.util.StringUtils;
-import model.mongo.GeneratorMongoCollection;
+import model.mongo.CollectionNode;
 
 /**
  * @author: gxz
@@ -12,7 +12,7 @@ public class GenericAbstractTokenParser extends AbstractTokenHandler {
 
 
     @Override
-    public String handlerToken(String parameter, GeneratorMongoCollection generatorMongoCollection) {
+    public String handlerToken(String parameter, CollectionNode collectionNode) {
         switch (parameter.toLowerCase()) {
             case "databasename":
             case "db":
@@ -20,7 +20,7 @@ public class GenericAbstractTokenParser extends AbstractTokenHandler {
             case "database":
             case "beanname":
             case "bean":
-                return StringUtils.upperCase(generatorMongoCollection.getDatabaseName());
+                return StringUtils.upperCase("asdfasdf");
             default:
                 throw new XMLConfigException("<template> #{" + parameter + "} 无法解析");
         }
