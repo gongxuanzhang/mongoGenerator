@@ -29,6 +29,8 @@ public class MongoParsing {
 
     private List<String> colNames;
 
+    private MongoDefinition mongoDefinition;
+
     private final static int[] TYPE = {3, 16, 18, 8, 9, 2, 1};
 
     private final static int ARRAY_TYPE = 4;
@@ -38,27 +40,31 @@ public class MongoParsing {
     public MongoParsing(MongoCollection<Document> collection, int scanCount) {
         this.collection = collection;
         this.scanCount = scanCount > MAX_COUNT ? MAX_COUNT : scanCount;
+        process();
     }
 
-    public MongoDefinition process() {
-        //初始化
+    private void process() {
+        // 初始化
         initColNames();
-        //解析属性值
-        MongoDefinition mongoDefinition = processType();
+        // 解析属性值
+        mongoDefinition= processType();
+        // 解析完成之后释放链接资源
         this.collection = null;
-        return mongoDefinition;
-
     }
+
+    public MongoDefinition getProduct(){
+        return mongoDefinition;
+    }
+
 
     /**
      * 功能描述:分组发送聚合函数(获得一级属性名)
      *
      * @author : gxz
-     * @date : 2019/7/4 16:24
      */
     public List<String> groupAggregation(Integer skip, Integer limit) throws MongoCommandException {
-        if (skip == null) skip = 0;
-        if (limit == null) limit = scanCount;
+        skip = skip==null?0:skip;
+        limit = limit==null?scanCount:limit;
         MongoCollection<Document> collection = this.collection;
         BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$$ROOT")));
         BasicDBObject $unwind = new BasicDBObject("$unwind", "$arrayofkeyvalue");
@@ -124,10 +130,8 @@ public class MongoParsing {
     /**
      * 功能描述:提供属性名 解析属性类型
      * 获取相应的属性信息  封装成generator对象
-     *
-     * @author: gxz
-     * @param: propertyName属性名 可以是层级名  比如 name 也可以是info.name
-     * @return: 解析之后的Model {@see #MongoDefinition}
+     * @param: propertyName 属性名 可以是层级名  比如 name 也可以是info.name
+     * @return : 解析之后的Model {@see #MongoDefinition}
      * @see MongoDefinition
      */
 
@@ -195,10 +199,8 @@ public class MongoParsing {
     /**
      * 功能描述:解析这个集合的列名  用ForkJoin框架实现
      *
-     * @author: gxz
-     * @date: 2019/7/5 14:48
      */
-    public void initColNames() {
+    private void initColNames() {
         long start = System.currentTimeMillis();
         int scan = this.scanCount;
         long count = this.collection.countDocuments();
@@ -214,19 +216,18 @@ public class MongoParsing {
                 "]初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
     }
 
-    public MongoDefinition processType() {
+    private MongoDefinition processType() {
         MongoDefinition result = new MongoDefinition();
         List<String> colNames = this.colNames;
         ForkJoinPool pool = new ForkJoinPool();
         ForkJoinTask<List<MongoDefinition>> task = new ForkJoinProcessType(colNames);
         List<MongoDefinition> invoke = pool.invoke(task);
-        return result.setChild(invoke).setType(3).setPropertyName(this.collection.getNamespace().getCollectionName());
+        return result.setChild(invoke).setPropertyName(this.collection.getNamespace().getCollectionName());
     }
 
     /**
      * 功能描述:forkJoin多线程框架的实现  通过业务拆分解析类型
      *
-     * @author: gxz
      */
     class ForkJoinProcessType extends RecursiveTask<List<MongoDefinition>> {
         List<String> names;
@@ -260,8 +261,6 @@ public class MongoParsing {
 
     /**
      * 功能描述:forkJoin多线程框架的实现  通过业务拆分获得属性名
-     *
-     * @author: gxz
      */
     class ForkJoinGetProcessName extends RecursiveTask<List<String>> {
         private int begin; //查询开始位置

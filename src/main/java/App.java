@@ -30,24 +30,15 @@ public class App {
     public static List<MongoDefinition> init(){
         XmlReader xmlReader = new XmlReader("aaa.xml");
         List<MongoNode> mongoNodes = xmlReader.getMongoNodes();
-        for (MongoNode mongoNode : mongoNodes) {
-            MongoClient mongoClient = MongoClientFactory.getMongoClient(mongoNode);
-
-        }
-
-
-
-
         List<MongoDefinition> mongoDefinitions = new ArrayList<>();
         for (MongoNode mongoNode : mongoNodes) {
             Map<CollectionNode, MongoCollection<Document>> mongoCollection = MongoClientFactory.getMongoCollection(mongoNode);
-            mongoCollection.forEach((genColl,mongoColl)->{
-                MongoParsing mongoParsing = new MongoParsing(mongoColl,genColl.getScannerCount());
-                MongoDefinition process = mongoParsing.process();
-                GenericAbstractTokenParser tokenParser = new GenericAbstractTokenParser();
+            mongoCollection.forEach((info,collection)->{
+                MongoParsing mongoParsing = new MongoParsing(collection,info.getScannerCount());
+                mongoDefinitions.add(mongoParsing.getProduct());
+              /*  GenericAbstractTokenParser tokenParser = new GenericAbstractTokenParser();
                 TemplateParsing templateParsing = new DefaultTemplateParsing("#{", "}", tokenParser);
-                process.fill(genColl,templateParsing);
-                mongoDefinitions.add(process);
+                process.fill(info,templateParsing);*/
             });
         }
         return mongoDefinitions;
