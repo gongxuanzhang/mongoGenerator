@@ -1,9 +1,10 @@
+import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
-import common.factory.GeneratorModelAnalysisFactory;
+import common.factory.MongoClientFactory;
+import model.MongoDefinition;
+import model.mongo.MongoNode;
 import writer.BeanWriter;
-import model.GeneratorModel;
-import model.mongo.GeneratorMongoCollection;
-import model.mongo.GeneratorMongoConnection;
+import model.mongo.CollectionNode;
 import org.bson.Document;
 import pasring.*;
 import writer.Writer;
@@ -19,27 +20,27 @@ import java.util.Map;
  */
 public class App {
     public static void main(String[] args) throws IOException {
-        List<GeneratorModel> init = init();
+        List<MongoDefinition> init = init();
         Writer beanWriter = new BeanWriter();
-        beanWriter.generator(init);
+        //beanWriter.generator(init);
     }
 
 
 
-    public static List<GeneratorModel> init(){
-        List<GeneratorMongoConnection> analyze = DataBaseParsing.resolver().analyze();
-        List<GeneratorModel> generatorModels = new ArrayList<>();
-        for (GeneratorMongoConnection generatorMongoConnection : analyze) {
-            Map<GeneratorMongoCollection, MongoCollection<Document>> mongoCollection = GeneratorModelAnalysisFactory.getMongoCollection(generatorMongoConnection);
-            mongoCollection.forEach((genColl,mongoColl)->{
-                MongoParsing mongoParsing = new MongoParsing(mongoColl,genColl.getScannerCount());
-                GeneratorModel process = mongoParsing.process();
-                GenericAbstractTokenParser tokenParser = new GenericAbstractTokenParser();
+    public static List<MongoDefinition> init(){
+        XmlReader xmlReader = new XmlReader("aaa.xml");
+        List<MongoNode> mongoNodes = xmlReader.getMongoNodes();
+        List<MongoDefinition> mongoDefinitions = new ArrayList<>();
+        for (MongoNode mongoNode : mongoNodes) {
+            Map<CollectionNode, MongoCollection<Document>> mongoCollection = MongoClientFactory.getMongoCollection(mongoNode);
+            mongoCollection.forEach((info,collection)->{
+                MongoParsing mongoParsing = new MongoParsing(collection,info.getScannerCount());
+                mongoDefinitions.add(mongoParsing.getProduct());
+              /*  GenericAbstractTokenParser tokenParser = new GenericAbstractTokenParser();
                 TemplateParsing templateParsing = new DefaultTemplateParsing("#{", "}", tokenParser);
-                process.fill(genColl,templateParsing);
-                generatorModels.add(process);
+                process.fill(info,templateParsing);*/
             });
         }
-        return generatorModels;
+        return mongoDefinitions;
     }
 }

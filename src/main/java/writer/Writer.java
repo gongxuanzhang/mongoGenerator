@@ -1,6 +1,6 @@
 package writer;
 
-import model.GeneratorModel;
+import model.MongoDefinition;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,5 +11,5 @@ import java.util.List;
  **/
 public interface Writer {
 
-    void generator(List<GeneratorModel> generatorModels) throws IOException;
+    void generator(List<MongoDefinition> mongoDefinitions) throws IOException;
 }

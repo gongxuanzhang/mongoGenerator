@@ -1,6 +1,8 @@
 package model;
 
 
+import org.w3c.dom.Element;
+
 /**
  * @author gxz
  * @date 2020/4/20 21:56
@@ -8,6 +10,14 @@ package model;
 public class Template {
     private String id;
     private String content;
+
+    public Template() {
+    }
+
+    public Template(Element element){
+        this.id = element.getAttribute("id");
+        this.content = element.getTextContent();
+    }
 
     public String getId() {
         return id;

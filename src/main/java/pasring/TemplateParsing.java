@@ -1,8 +1,7 @@
 package pasring;
 
 
-import model.Template;
-import model.mongo.GeneratorMongoCollection;
+import model.mongo.CollectionNode;
 
 /**
  * 模板解析接口  可自定义实现
@@ -11,6 +10,6 @@ import model.mongo.GeneratorMongoCollection;
  */
 public interface TemplateParsing {
 
-    String analyzeContent(String content, GeneratorMongoCollection generatorMongoCollection);
+    String analyzeContent(String content, CollectionNode collectionNode);
 
 }

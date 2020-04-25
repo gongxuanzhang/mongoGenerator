@@ -3,18 +3,13 @@ package writer;
 
 import common.util.PathUtil;
 import model.GeneratorFileInfo;
-import model.GeneratorModel;
-import model.Template;
-import pasring.TemplateParsing;
-import sun.java2d.opengl.WGLSurfaceData;
+import model.MongoDefinition;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 /**
  * @author gxz
@@ -24,9 +19,9 @@ public class BeanWriter implements Writer {
 
 
     @Override
-    public void generator(List<GeneratorModel> generatorModels) throws IOException {
-        for (GeneratorModel generatorModel : generatorModels) {
-            List<GeneratorFileInfo> generatorFileInfo = writeAnalyze(generatorModel);
+    public void generator(List<MongoDefinition> mongoDefinitions) throws IOException {
+        for (MongoDefinition mongoDefinition : mongoDefinitions) {
+            List<GeneratorFileInfo> generatorFileInfo = writeAnalyze(mongoDefinition);
             for (GeneratorFileInfo fileInfo : generatorFileInfo) {
                 int i = 1;
                 String configPath = fileInfo.getFilePath();
@@ -53,24 +48,24 @@ public class BeanWriter implements Writer {
         }
     }
 
-    private List<GeneratorFileInfo> writeAnalyze(GeneratorModel generatorModel) {
+    private List<GeneratorFileInfo> writeAnalyze(MongoDefinition mongoDefinition) {
         List<GeneratorFileInfo> result = new ArrayList<>();
         //添加主bean
-        result.add(primaryBeanAnalyze(generatorModel));
-        result.addAll(childrenBeanAnalyze(generatorModel.getChild()));
+        result.add(primaryBeanAnalyze(mongoDefinition));
+        result.addAll(childrenBeanAnalyze(mongoDefinition.getChild()));
         return result;
     }
 
-    private GeneratorFileInfo primaryBeanAnalyze(GeneratorModel generatorModel) {
+    private GeneratorFileInfo primaryBeanAnalyze(MongoDefinition mongoDefinition) {
         GeneratorFileInfo primaryBean = new GeneratorFileInfo();
-        primaryBean.setContent(primaryModel2Content(generatorModel));
-        primaryBean.setFileName(generatorModel.getPropertyName());
-        return primaryBean.setFilePath(generatorModel.getPath());
+        primaryBean.setContent(primaryModel2Content(mongoDefinition));
+        primaryBean.setFileName(mongoDefinition.getPropertyName());
+        return primaryBean.setFilePath(mongoDefinition.getPath());
     }
 
-    private List<GeneratorFileInfo> childrenBeanAnalyze(List<GeneratorModel> children) {
+    private List<GeneratorFileInfo> childrenBeanAnalyze(List<MongoDefinition> children) {
         List<GeneratorFileInfo> result = new ArrayList<>();
-        for (GeneratorModel child : children) {
+        for (MongoDefinition child : children) {
             GeneratorFileInfo primaryFile = new GeneratorFileInfo();
             if(child.hasChild()){
                 primaryFile.setContent(primaryModel2Content(child));
@@ -85,15 +80,15 @@ public class BeanWriter implements Writer {
         return result;
     }
 
-    private String primaryModel2Content(GeneratorModel primaryModel) {
+    private String primaryModel2Content(MongoDefinition primaryModel) {
         StringBuilder builder = new StringBuilder();
-        List<GeneratorModel> child = primaryModel.getChild();
+        List<MongoDefinition> child = primaryModel.getChild();
         builder.append("package " + primaryModel.getPath() + ";\r\n");
         importPackage(builder);
         builder.append("public class ").append(primaryModel.getPropertyName()).append(" {\r\n");
-        for (GeneratorModel generatorModel : child) {
-            String type = typeString(generatorModel);
-            builder.append("private " + type + generatorModel.getPropertyName() + ";\r\n");
+        for (MongoDefinition mongoDefinition : child) {
+            String type = typeString(mongoDefinition);
+            builder.append("private " + type + mongoDefinition.getPropertyName() + ";\r\n");
         }
         builder.append("}");
         return builder.toString();
@@ -106,10 +101,10 @@ public class BeanWriter implements Writer {
         builder.append("import java.time.LocalDateTime;\r\n");
     }
 
-    private String typeString(GeneratorModel generatorModel) {
+    private String typeString(MongoDefinition mongoDefinition) {
         StringBuilder typeStr = new StringBuilder();
-        int type = generatorModel.getType();
-        if (generatorModel.getArray()) {
+        int type = mongoDefinition.getType();
+        if (mongoDefinition.getArray()) {
             typeStr.append("List<");
             if (type == 2) {
                 typeStr.append("String> ");

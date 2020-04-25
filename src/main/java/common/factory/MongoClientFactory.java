@@ -6,19 +6,17 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
 import com.sun.istack.internal.NotNull;
 import common.util.CollectionUtils;
-import model.mongo.GeneratorMongoCollection;
-import model.mongo.GeneratorMongoConnection;
-import model.mongo.GeneratorMongoDatabase;
+import model.mongo.CollectionNode;
+import model.mongo.MongoNode;
+import model.mongo.DataBaseNode;
 import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 解析工厂  主要针对xml解析成的对象 返回连接实体
@@ -26,13 +24,18 @@ import java.util.stream.Collectors;
  * @author: gxz
  * @email : 514190950@qq.com
  **/
-public class GeneratorModelAnalysisFactory {
+public class MongoClientFactory {
 
-    private GeneratorModelAnalysisFactory(){
+    private MongoClientFactory(){
         throw new RuntimeException("cannot create instance");
     }
-
-    public static MongoClient getMongoClient(GeneratorMongoConnection connection) {
+    /***
+     * 通过配置信息返回对应的mongoClient
+     * @author gxz
+     * @date  2020/4/24
+     * @param connection 通过xml解析成的节点
+     **/
+    private static MongoClient getMongoClient(MongoNode connection) {
         List<ServerAddress> adds = new ArrayList<>();
         //ServerAddress()两个参数分别为 服务器地址 和 端口
         ServerAddress serverAddress = new ServerAddress(connection.getHost(), connection.getPort());
@@ -48,22 +51,21 @@ public class GeneratorModelAnalysisFactory {
         }
         return new MongoClient(adds);
     }
-    public static Map<GeneratorMongoCollection, MongoCollection<Document>> getMongoCollection
-            (GeneratorMongoConnection connection){
+
+    public static Map<CollectionNode, MongoCollection<Document>> getMongoCollection(MongoNode connection){
         return getMongoCollection(connection,new HashMap<>(16));
     }
 
-    public static Map<GeneratorMongoCollection, MongoCollection<Document>> getMongoCollection
-            (GeneratorMongoConnection connection,@NotNull Map<GeneratorMongoCollection, MongoCollection<Document>> map){
-        List<GeneratorMongoDatabase> databases = connection.getDatabases();
+    public static Map<CollectionNode, MongoCollection<Document>> getMongoCollection(MongoNode connection, @NotNull Map<CollectionNode, MongoCollection<Document>> map){
+        List<DataBaseNode> databases = connection.getDatabases();
         if(CollectionUtils.isEmpty(databases)){
                 return map;
         }
         MongoClient mongoClient = getMongoClient(connection);
-        for (GeneratorMongoDatabase databaseInfo : databases) {
+        for (DataBaseNode databaseInfo : databases) {
             MongoDatabase database = mongoClient.getDatabase(databaseInfo.getName());
-            List<GeneratorMongoCollection> collectionInfos = databaseInfo.getGeneratorMongoCollections();
-            for (GeneratorMongoCollection collectionInfo : collectionInfos) {
+            List<CollectionNode> collectionInfos = databaseInfo.getCollectionNodes();
+            for (CollectionNode collectionInfo : collectionInfos) {
                 MongoCollection<Document> collection = database.getCollection(collectionInfo.getName());
                 map.put(collectionInfo,collection);
             }
