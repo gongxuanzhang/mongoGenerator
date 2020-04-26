@@ -8,6 +8,7 @@ import writer.BeanWriterSupport;
 import model.mongo.CollectionNode;
 import org.bson.Document;
 import pasring.*;
+import writer.TemplateWriterSupport;
 import writer.Writer;
 import writer.WriterSupport;
 
@@ -26,20 +27,17 @@ public class App {
 
         GenericAbstractTokenParser genericAbstractTokenParser = new GenericAbstractTokenParser();
         TemplateParsing templateParsing = new DefaultTemplateParsing("#{", "}", genericAbstractTokenParser);
-        for (MongoDefinition mongoDefinition : init) {
-            List<Template> templates = mongoDefinition.getTemplate();
-            if (CollectionUtils.isNotEmpty(templates)) {
-                for (Template template : templates) {
-                    String original = template.getContent();
-                    String escape = templateParsing.analyzeContent(original, mongoDefinition.getInfo());
-                    template.setContent(escape);
-                }
-            }
-            WriterSupport beanWriterSupport = new BeanWriterSupport();
-            Writer beanWriter = new Writer(beanWriterSupport);
-            beanWriter.generator(mongoDefinition);
+        templateParsing.fillTemplate(init);
 
+        for (MongoDefinition mongoDefinition : init) {
+          /*  WriterSupport beanWriterSupport = new BeanWriterSupport();
+            Writer beanWriter = new Writer(beanWriterSupport);
+            beanWriter.generator(mongoDefinition);*/
+            WriterSupport templateWriterSupport = new TemplateWriterSupport();
+            Writer template = new Writer(templateWriterSupport);
+            template.generator(mongoDefinition);
         }
+
 
         //beanWriter.generator(init);
     }

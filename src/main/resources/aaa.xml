@@ -16,13 +16,13 @@
     </mongo>
 
 
-    <template id="t1">
+    <template id="t1" package="controller" name="testController">
             public AA class(){
                 #{dbname}
         }
     </template>
 
-    <template id="t2">
+    <template id="t2" package="service" name="testService">
         public AA class(){
         #{dbname}
         }
