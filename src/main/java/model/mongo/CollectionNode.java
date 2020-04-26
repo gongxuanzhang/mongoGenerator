@@ -23,7 +23,9 @@ public class CollectionNode {
     private List<Template> templates;
     private String beanClose;
 
-    public CollectionNode(Element element, Map<String,Template> templateMap) {
+    public CollectionNode(Element element, Map<String,Template> templateMap,DataBaseNode dataBaseNode) {
+        final String defaultClose = "BO";
+        this.dataBase = dataBaseNode;
         this.name = element.getAttribute("name");
         this.scannerCount = Integer.valueOf(element.getAttribute("scannerCount"));
         this.primaryPackage = element.getAttribute("package");
@@ -32,6 +34,11 @@ public class CollectionNode {
         String templateNameStr = element.getAttribute("template");
         this.templateNames = Arrays.asList(templateNameStr.split(separator));
         templates = new ArrayList<>(this.templateNames.size());
+        String beanClose = element.getAttribute("beanClose");
+        if(StringUtils.isEmpty(beanClose)){
+            beanClose = StringUtils.isEmpty(dataBaseNode.getBeanClose())?defaultClose:dataBaseNode.getBeanClose();
+        }
+        this.beanClose = beanClose;
         for (String templateName : this.templateNames) {
             Template template = templateMap.getOrDefault(templateName,null);
              if(template == null){

@@ -10,6 +10,8 @@ import org.w3c.dom.Element;
 public class Template {
     private String id;
     private String content;
+    private String configPackage;
+    private String name;
 
     public Template() {
     }
@@ -18,6 +20,26 @@ public class Template {
         this.id = element.getAttribute("id");
         this.content = element.getTextContent();
     }
+
+    public String getConfigPackage() {
+        return configPackage;
+    }
+
+    public Template setConfigPackage(String configPackage) {
+        this.configPackage = configPackage;
+        return this;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Template setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+
 
     public String getId() {
         return id;

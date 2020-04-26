@@ -21,6 +21,8 @@ public class DefaultTemplateParsing implements TemplateParsing {
         this.handler = handler;
     }
 
+
+
     /***
      *   解析替换内容  例:
      * +-+-+-+-+-+-+-+---+-+--                      +-+-+-+-+-+-+-+-+

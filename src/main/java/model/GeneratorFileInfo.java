@@ -10,6 +10,7 @@ public class GeneratorFileInfo {
     private String content;
 
 
+
     public String getFileName() {
         return fileName;
     }
