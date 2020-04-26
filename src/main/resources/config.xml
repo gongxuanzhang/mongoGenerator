@@ -9,13 +9,13 @@
 
 
 
-    <template id="t1">
+    <template id="t1" name="TestController" package="controller">
             public AA class(){
                 #{dbname}
         }
     </template>
 
-    <template id="t2">
+    <template id="t2" name="TestService" package="service">
         public AA class(){
         #{dbname}
         }

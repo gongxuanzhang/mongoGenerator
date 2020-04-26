@@ -107,7 +107,11 @@ public class XmlReader {
                 if (templatePool.containsKey(id)) {
                     throw new XMLConfigException("<template> id [" + id + "] repetition");
                 }
-                templatePool.put(id, new Template(e));
+                Template template = new Template(e);
+                String aPackage = e.getAttribute("package");
+                String name = e.getAttribute("name");
+                template.setConfigPackage(aPackage).setName(name);
+                templatePool.put(id, template);
             }
         }
     }

@@ -44,7 +44,9 @@ public class Writer {
     public File existsFilter(GeneratorFileInfo writtenWord) throws IOException {
         String configPath = writtenWord.getFilePath();
         String fileName = writtenWord.getFileName();
-        configPath = configPath.replaceAll("\\.", "/");
+        if (configPath.contains(".")) {
+            configPath = configPath.replaceAll("\\.", "/");
+        }
         String dirPath = PathUtil.getPathJava() + configPath;
         int i = 1;
         String javaPath;

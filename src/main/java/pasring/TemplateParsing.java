@@ -13,10 +13,16 @@ import java.util.List;
  * @author gxz
  * @email gxz
  */
+@FunctionalInterface
 public interface TemplateParsing {
 
     String analyzeContent(String content, CollectionNode collectionNode);
 
+    /**
+     * 默认实现方法 根据不同analyzeContent的实现而改变
+     * 可以算是模板方法
+     * @param mongoDefinitions
+     */
     default void  fillTemplate(List<MongoDefinition> mongoDefinitions){
         for (MongoDefinition mongoDefinition : mongoDefinitions) {
             List<Template> templates = mongoDefinition.getTemplate();

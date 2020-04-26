@@ -44,7 +44,7 @@ public class App {
 
 
     public static List<MongoDefinition> init() {
-        XmlReader xmlReader = new XmlReader("aaa.xml");
+        XmlReader xmlReader = new XmlReader("config.xml");
         List<MongoNode> mongoNodes = xmlReader.getMongoNodes();
         List<MongoDefinition> mongoDefinitions = new ArrayList<>();
         for (MongoNode mongoNode : mongoNodes) {
