@@ -29,6 +29,8 @@ public class XmlReader {
 
     private List<MongoNode> mongoNodes;
 
+    private int collectionCount = 0;
+
     public XmlReader(String configPath) {
         this.configPath = configPath;
         init();
@@ -44,6 +46,9 @@ public class XmlReader {
 
     public List<MongoNode> getMongoNodes() {
         return mongoNodes;
+    }
+    public int getCollectionCount(){
+        return collectionCount;
     }
 
     private void loadMongo() {
@@ -76,8 +81,8 @@ public class XmlReader {
                             // 创建collectionNode
                             Node collectionNode = collectionNodeList.item(k);
                             if (collectionNode instanceof Element) {
-                                CollectionNode collectionNodeItem = new CollectionNode((Element) collectionNode,templatePool);
-                                collectionNodeItem.setDataBase(dataBaseNode);
+                                CollectionNode collectionNodeItem = new CollectionNode((Element) collectionNode,templatePool,dataBaseNode);
+                                collectionCount++;
                                 collectionNodes.add(collectionNodeItem);
                             }
                         }

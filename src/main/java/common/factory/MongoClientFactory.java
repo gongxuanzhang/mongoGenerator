@@ -56,6 +56,10 @@ public class MongoClientFactory {
         return getMongoCollection(connection,new HashMap<>(16));
     }
 
+    /***
+     * 每一个collectionNode都对应一个数据库连接查询对象
+     * @author gxz
+     **/
     public static Map<CollectionNode, MongoCollection<Document>> getMongoCollection(MongoNode connection, @NotNull Map<CollectionNode, MongoCollection<Document>> map){
         List<DataBaseNode> databases = connection.getDatabases();
         if(CollectionUtils.isEmpty(databases)){

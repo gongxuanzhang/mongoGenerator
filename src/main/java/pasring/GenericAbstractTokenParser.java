@@ -20,7 +20,7 @@ public class GenericAbstractTokenParser extends AbstractTokenHandler {
             case "database":
             case "beanname":
             case "bean":
-                return StringUtils.upperCase("asdfasdf");
+                return StringUtils.upperCaseFirst(collectionNode.getName()+collectionNode.getBeanClose());
             default:
                 throw new XMLConfigException("<template> #{" + parameter + "} 无法解析");
         }

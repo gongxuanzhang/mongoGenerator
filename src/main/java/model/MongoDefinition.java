@@ -6,6 +6,8 @@ import model.mongo.CollectionNode;
 import pasring.TemplateParsing;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +34,8 @@ public class MongoDefinition implements Serializable {
     private String innerPath;
     /***联系的模板 只有主类才拥有**/
     private List<Template> template;
+    /***原生信息*/
+    private CollectionNode info;
 
 
     public boolean hasChild() {
@@ -39,21 +43,42 @@ public class MongoDefinition implements Serializable {
         return type == null || Objects.equals(type, objectType) || CollectionUtils.isNotEmpty(child);
     }
 
+    public MongoDefinition fill(){
+        if(CollectionUtils.isNotEmpty(this.child)){
+            ArrayList<MongoDefinition> list = new ArrayList<>();
+            getChildren(this.child,list);
+            for (MongoDefinition mongoDefinition : list) {
+                mongoDefinition.setPath(innerPath);
+                String propertyName = mongoDefinition.getPropertyName();
+                if(propertyName.contains(".")){
+                    int index = propertyName.lastIndexOf(".");
+                    propertyName = propertyName.substring(index+1);
+                }
+                mongoDefinition.setPropertyName(propertyName);
+            }
+        }
+        return this;
+    }
+
+    private void getChildren(List<MongoDefinition> child,List<MongoDefinition> vessel){
+        for (MongoDefinition mongoDefinition : child) {
+            vessel.add(mongoDefinition);
+            if(mongoDefinition.hasChild()){
+                getChildren(mongoDefinition.getChild(),vessel);
+            }
+        }
+    }
     public boolean primaryBean() {
         return type == null;
     }
 
-    public void fill(CollectionNode collectionNode, TemplateParsing templateParsing) {
-        this.setPropertyName(collectionNode.getName() + collectionNode.getBeanClose());
-        List<Template> templates = collectionNode.getTemplates();
-        for (Template template : templates) {
-            String templateContent
-                    = templateParsing.analyzeContent(template.getContent(), collectionNode);
-            template.setContent(templateContent);
-        }
-        this.setPath(collectionNode.getPrimaryPackage());
-        this.setInnerPath(collectionNode.getInnerPackage());
-        this.setTemplate(collectionNode.getTemplates());
+    public CollectionNode getInfo() {
+        return info;
+    }
+
+    public MongoDefinition setInfo(CollectionNode info) {
+        this.info = info;
+        return this;
     }
 
     /**

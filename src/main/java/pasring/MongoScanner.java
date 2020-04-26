@@ -7,7 +7,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.log.model.Type;
 import common.util.CollectionUtils;
+import common.util.StringUtils;
 import model.MongoDefinition;
+import model.mongo.CollectionNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bson.Document;
@@ -20,8 +22,8 @@ import java.util.stream.Collectors;
  * @author: gxz
  * @email : 514190950@qq.com
  **/
-public class MongoParsing {
-    private static Logger logger = LogManager.getLogger(MongoParsing.class);
+public class MongoScanner {
+    private static Logger logger = LogManager.getLogger(MongoScanner.class);
 
     private MongoCollection<Document> collection;
 
@@ -31,28 +33,39 @@ public class MongoParsing {
 
     private MongoDefinition mongoDefinition;
 
+    final private CollectionNode info;
+
     private final static int[] TYPE = {3, 16, 18, 8, 9, 2, 1};
 
     private final static int ARRAY_TYPE = 4;
 
     private final static int MAX_COUNT = 200000;
 
-    public MongoParsing(MongoCollection<Document> collection, int scanCount) {
+
+    public MongoScanner(MongoCollection<Document> collection, CollectionNode info) {
+        this.info = info;
         this.collection = collection;
+        int scanCount = info.getScannerCount();
         this.scanCount = scanCount > MAX_COUNT ? MAX_COUNT : scanCount;
-        process();
+        scan();
     }
 
-    private void process() {
+    private void scan() {
         // 初始化
         initColNames();
         // 解析属性值
-        mongoDefinition= processType();
+        mongoDefinition = scanType();
+        mongoDefinition.setTemplate(info.getTemplates());
+        String primaryPackage = info.getPrimaryPackage();
+        mongoDefinition.setPath(primaryPackage);
+        String innerPackage = info.getInnerPackage();
+        mongoDefinition.setInnerPath(StringUtils.isEmpty(innerPackage) ? primaryPackage : innerPackage);
+        mongoDefinition.setInfo(info);
         // 解析完成之后释放链接资源
         this.collection = null;
     }
 
-    public MongoDefinition getProduct(){
+    public MongoDefinition getProduct() {
         return mongoDefinition;
     }
 
@@ -63,8 +76,8 @@ public class MongoParsing {
      * @author : gxz
      */
     public List<String> groupAggregation(Integer skip, Integer limit) throws MongoCommandException {
-        skip = skip==null?0:skip;
-        limit = limit==null?scanCount:limit;
+        skip = skip == null ? 0 : skip;
+        limit = limit == null ? scanCount : limit;
         MongoCollection<Document> collection = this.collection;
         BasicDBObject $project = new BasicDBObject("$project", new BasicDBObject("arrayofkeyvalue", new BasicDBObject("$objectToArray", "$$ROOT")));
         BasicDBObject $unwind = new BasicDBObject("$unwind", "$arrayofkeyvalue");
@@ -130,14 +143,16 @@ public class MongoParsing {
     /**
      * 功能描述:提供属性名 解析属性类型
      * 获取相应的属性信息  封装成generator对象
-     * @param: propertyName 属性名 可以是层级名  比如 name 也可以是info.name
+     *
      * @return : 解析之后的Model {@see #MongoDefinition}
+     * @param: propertyName 属性名 可以是层级名  比如 name 也可以是info.name
      * @see MongoDefinition
      */
 
     public MongoDefinition processNameType(String propertyName) {
         MongoCollection<Document> collection = this.collection;
         MongoDefinition result = new MongoDefinition();
+        result.setInfo(info);
         if ("_id".equals(propertyName)) {
             result.setType(2);
             result.setPropertyName("_id");
@@ -198,7 +213,6 @@ public class MongoParsing {
 
     /**
      * 功能描述:解析这个集合的列名  用ForkJoin框架实现
-     *
      */
     private void initColNames() {
         long start = System.currentTimeMillis();
@@ -216,7 +230,7 @@ public class MongoParsing {
                 "]初始化列名成功.....     用时: " + (System.currentTimeMillis() - start) + "毫秒");
     }
 
-    private MongoDefinition processType() {
+    private MongoDefinition scanType() {
         MongoDefinition result = new MongoDefinition();
         List<String> colNames = this.colNames;
         ForkJoinPool pool = new ForkJoinPool();
@@ -227,7 +241,6 @@ public class MongoParsing {
 
     /**
      * 功能描述:forkJoin多线程框架的实现  通过业务拆分解析类型
-     *
      */
     class ForkJoinProcessType extends RecursiveTask<List<MongoDefinition>> {
         List<String> names;
@@ -242,7 +255,9 @@ public class MongoParsing {
             if (names.size() <= THRESHOLD) {
                 List<MongoDefinition> result = new ArrayList<>();
                 for (String name : names) {
-                    result.add(processNameType(name));
+                    MongoDefinition childrenDefinition = processNameType(name);
+                    childrenDefinition.setInnerPath(info.getInnerPackage());
+                    result.add(childrenDefinition.setPath(info.getPrimaryPackage()));
                 }
                 return result;
             } else {
