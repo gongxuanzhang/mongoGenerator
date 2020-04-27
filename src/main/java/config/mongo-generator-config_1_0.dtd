@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+        <!ELEMENT mongoGenerator (mongo+| template*)>
+
+
+        <!ELEMENT mongo (database+)>
+        <!ATTLIST mongo
+                id ID #REQUIRED
+                host CDATA #REQUIRED
+                port CDATA #REQUIRED
+                auth (true|false) #IMPLIED
+                username CDATA #IMPLIED
+                password CDATA #IMPLIED
+                source CDATA #IMPLIED>
+
+        <!ELEMENT database (collection+)>
+        <!ATTLIST database
+                beanClose CDATA #IMPLIED
+                name CDATA #REQUIRED>
+
+        <!ELEMENT collection ()>
+        <!ATTLIST collection
+                name CDATA #REQUIRED
+                beanClose CDATA #IMPLIED
+                scannerCount CDATA #REQUIRED
+                primaryPackage CDATA #REQUIRED
+                innerPackage CDATA #IMPLIED
+                template IDREFS #IMPLIED
+                >
+
+        <!ELEMENT template ()>
+        <!ATTLIST template
+                id ID #REQUIRED
+                name CDATA #REQUIRED
+                package CDATA #REQUIRED
+               >
+
+
+

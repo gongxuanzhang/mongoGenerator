@@ -12,7 +12,7 @@ import java.util.*;
  * @email : 514190950@qq.com
  **/
 public class CollectionNode {
-    private static final String separator = ",";
+    private static final String SEPARATOR = " ";
 
     private DataBaseNode dataBase;
     private String name;
@@ -32,7 +32,7 @@ public class CollectionNode {
         String innerPackage = element.getAttribute("innerPackage");
         this.innerPackage = StringUtils.isEmpty(innerPackage)?primaryPackage:innerPackage;
         String templateNameStr = element.getAttribute("template");
-        this.templateNames = Arrays.asList(templateNameStr.split(separator));
+        this.templateNames = Arrays.asList(templateNameStr.split(SEPARATOR));
         templates = new ArrayList<>(this.templateNames.size());
         String beanClose = element.getAttribute("beanClose");
         if(StringUtils.isEmpty(beanClose)){

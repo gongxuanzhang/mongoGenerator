@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<myGenerator>
+<!DOCTYPE mongoGenerator SYSTEM "config/mongo-generator-config_1_0.dtd" >
+<mongoGenerator>
     <mongo id="mongo1" host="localhost" auth="false" port="27017" username="tincery" password="Txy123.com"
            source="secret_reconnaissance_pro">
-        <database name="tincery_pro">
-            <collection name="test" scannerCount="561" repetitionStrategy="map" primaryPackage="com.sadf" template="t1,t2"/>
+        <database name="tincery_pro" beanClose="BO">
+            <collection name="test" scannerCount="561" primaryPackage="com.sadf"  template="t1 t2"/>
         </database>
     </mongo>
-
-
-
     <template id="t1" name="TestController" package="controller">
             public  #{dbname} class{
             #{dbname}
@@ -20,4 +18,4 @@
         #{dbname}
         }
     </template>
-</myGenerator>
+</mongoGenerator>
