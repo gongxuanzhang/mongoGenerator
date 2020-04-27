@@ -1,6 +1,5 @@
 # mongoGenerator
-唯一支持mongodb的逆向工程
-
+唯一支持mongodb的逆向工程,只要你在用mongo进行开发，相信本项目都会或多或少帮助到你
 
 
 
